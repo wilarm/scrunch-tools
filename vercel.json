@@ -8,6 +8,7 @@
     { "src": "/bulk-setup", "dest": "/apps/bulk-setup/dist/index.html" },
 
     { "src": "/export/assets/(.*)", "dest": "/apps/scrunch-api-exporter/dist/assets/$1" },
+    { "src": "/export/scrunch-logo.svg", "dest": "/apps/scrunch-api-exporter/dist/scrunch-logo.svg" },
     { "src": "/export/(.*)", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
     { "src": "/export", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
 

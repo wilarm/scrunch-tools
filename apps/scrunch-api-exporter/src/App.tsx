@@ -144,7 +144,18 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-center" style={{ backgroundImage: 'url(/background.png)' }}>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <a href="/">
+              <img src={`${import.meta.env.BASE_URL}scrunch-logo.svg`} alt="Scrunch" className="h-8" />
+            </a>
+            <span className="text-sm text-gray-600">API Exporter</span>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="px-8 py-6" style={{ backgroundColor: '#e8ffb5' }}>
