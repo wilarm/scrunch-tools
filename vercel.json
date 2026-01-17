@@ -3,6 +3,7 @@
   "outputDirectory": ".",
   "routes": [
     { "src": "/bulk-setup/assets/(.*)", "dest": "/apps/bulk-setup/dist/assets/$1" },
+    { "src": "/bulk-setup/scrunch_primary_logo_\\(dark\\).svg", "dest": "/apps/bulk-setup/dist/scrunch_primary_logo_(dark).svg" },
     { "src": "/bulk-setup/(.*)", "dest": "/apps/bulk-setup/dist/index.html" },
     { "src": "/bulk-setup", "dest": "/apps/bulk-setup/dist/index.html" },
 
@@ -10,7 +11,7 @@
     { "src": "/export/(.*)", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
     { "src": "/export", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
 
-    { "src": "/scrunch_primary_logo_(dark).svg", "dest": "/apps/home/scrunch_primary_logo_(dark).svg" },
+    { "src": "/scrunch_primary_logo_\\(dark\\).svg", "dest": "/apps/home/scrunch_primary_logo_(dark).svg" },
     { "src": "/(.*)", "dest": "/apps/home/index.html" }
   ]
 }
