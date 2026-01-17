@@ -22,7 +22,6 @@ type WorkflowType = 'none' | 'brands' | 'prompts';
 function App() {
   const [activeWorkflow, setActiveWorkflow] = useState<WorkflowType>('none');
   const [apiKey, setApiKey] = useState('');
-  const [openaiKey, setOpenaiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
   const [websiteInput, setWebsiteInput] = useState('');
   const [template, setTemplate] = useState<TemplateConfig>({
     descriptionTemplate: '',
@@ -98,11 +97,6 @@ function App() {
   };
 
   const handleEnrichRows = async () => {
-    if (!openaiKey.trim()) {
-      alert('Please enter your OpenAI API key');
-      return;
-    }
-
     setIsEnriching(true);
 
     const websitesToEnrich = brands
@@ -119,7 +113,6 @@ function App() {
 
     await enrichWebsitesWithConcurrency(
       websitesToEnrich,
-      openaiKey,
       3,
       (website, result, error) => {
         setBrands(prev =>
@@ -179,7 +172,7 @@ function App() {
 
   const handleRetryEnrich = async (brandId: string) => {
     const brand = brands.find(b => b.id === brandId);
-    if (!brand || !openaiKey.trim()) return;
+    if (!brand) return;
 
     setBrands(prev =>
       prev.map(b => (b.id === brandId ? { ...b, enrichmentStatus: 'enriching', enrichmentError: undefined } : b))
@@ -187,7 +180,6 @@ function App() {
 
     await enrichWebsitesWithConcurrency(
       [brand.website],
-      openaiKey,
       1,
       (website, result, error) => {
         setBrands(prev =>
@@ -532,11 +524,6 @@ function App() {
       return;
     }
 
-    if (!openaiKey.trim()) {
-      alert('Please enter your OpenAI API key');
-      return;
-    }
-
     if (promptVariants.length === 0) {
       alert('Please generate prompt preview first.');
       return;
@@ -547,7 +534,6 @@ function App() {
     try {
       await enrichPromptVariants(
         apiKey,
-        openaiKey,
         promptVariants,
         (progress) => {
           if (progress.error) {
@@ -630,19 +616,6 @@ function App() {
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           placeholder="Enter your Scrunch API key"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-900 placeholder:text-gray-400 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="openai-key" className="block text-sm font-medium text-gray-900 mb-2">
-                          OpenAI API Key (for enrichment)
-                        </label>
-                        <input
-                          id="openai-key"
-                          type="password"
-                          value={openaiKey}
-                          onChange={(e) => setOpenaiKey(e.target.value)}
-                          placeholder="Enter your OpenAI API key"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-900 placeholder:text-gray-400 text-sm"
                         />
                       </div>
@@ -795,9 +768,9 @@ function App() {
                       </label>
                       <button
                         onClick={handleEnrichRows}
-                        disabled={isEnriching || !openaiKey.trim()}
+                        disabled={isEnriching}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                          !isEnriching && openaiKey.trim()
+                          !isEnriching
                             ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
                             : 'bg-muted text-muted-foreground cursor-not-allowed'
                         }`}
@@ -805,11 +778,6 @@ function App() {
                         {isEnriching ? 'Enriching...' : 'Enrich Rows'}
                       </button>
                     </div>
-                    {!openaiKey.trim() && (
-                      <p className="text-sm text-[hsl(var(--middle))] text-right">
-                        Enter your OpenAI API key above to enable enrichment
-                      </p>
-                    )}
 
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex items-center justify-between">

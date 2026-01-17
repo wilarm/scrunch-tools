@@ -4,7 +4,7 @@ import OpenAI from "npm:openai@4";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey, X-OpenAI-Key",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
 const enrichmentCache = new Map<string, any>();
@@ -18,12 +18,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const openaiKey = req.headers.get("X-OpenAI-Key");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) {
       return new Response(
-        JSON.stringify({ error: "Missing OpenAI API key in X-OpenAI-Key header" }),
+        JSON.stringify({ error: "OPENAI_API_KEY not configured in environment" }),
         {
-          status: 400,
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );

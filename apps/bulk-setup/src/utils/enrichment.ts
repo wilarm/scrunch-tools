@@ -1,8 +1,7 @@
 import { EnrichmentResult } from '../types/brand';
 
 export async function enrichWebsite(
-  website: string,
-  openaiKey: string
+  website: string
 ): Promise<EnrichmentResult> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -12,7 +11,6 @@ export async function enrichWebsite(
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${supabaseAnonKey}`,
-      'X-OpenAI-Key': openaiKey,
     },
     body: JSON.stringify({ website }),
   });
@@ -27,7 +25,6 @@ export async function enrichWebsite(
 
 export async function enrichWebsitesWithConcurrency(
   websites: string[],
-  openaiKey: string,
   concurrency: number,
   onProgress: (website: string, result: EnrichmentResult | null, error: string | null) => void
 ): Promise<void> {
@@ -38,7 +35,7 @@ export async function enrichWebsitesWithConcurrency(
     while (inProgress.size < concurrency && queue.length > 0) {
       const website = queue.shift()!;
 
-      const promise = enrichWebsite(website, openaiKey)
+      const promise = enrichWebsite(website)
         .then((result) => {
           onProgress(website, result, null);
         })

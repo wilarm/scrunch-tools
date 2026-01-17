@@ -12,7 +12,6 @@ export interface PromptEnrichmentProgress {
 
 export async function enrichPromptVariants(
   apiKey: string,
-  openaiKey: string,
   variants: PromptVariant[],
   onProgress: (progress: PromptEnrichmentProgress) => void
 ): Promise<void> {
@@ -52,7 +51,7 @@ export async function enrichPromptVariants(
 
     console.log(`Enriching brand ${brandId} (${brand.name}) from website: ${brand.website}`);
     try {
-      const enrichmentResult = await enrichWebsite(brand.website, openaiKey);
+      const enrichmentResult = await enrichWebsite(brand.website);
       console.log(`Successfully enriched brand ${brandId}`);
 
       onProgress({
