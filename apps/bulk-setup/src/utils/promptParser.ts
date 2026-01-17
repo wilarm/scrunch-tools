@@ -1,0 +1,73 @@
+export function parsePrompts(input: string): string[] {
+  if (!input || !input.trim()) {
+    return [];
+  }
+
+  const lines = input.split('\n');
+  const prompts: string[] = [];
+
+  for (const line of lines) {
+    const commaSeparated = line.split(',');
+    for (const item of commaSeparated) {
+      const trimmed = item.trim();
+      if (trimmed) {
+        prompts.push(trimmed);
+      }
+    }
+  }
+
+  return prompts;
+}
+
+export function parseBrandIds(input: string): number[] {
+  if (!input || !input.trim()) {
+    return [];
+  }
+
+  const lines = input.split('\n');
+  const ids: number[] = [];
+
+  for (const line of lines) {
+    const commaSeparated = line.split(',');
+    for (const item of commaSeparated) {
+      const trimmed = item.trim();
+      if (trimmed) {
+        const id = parseInt(trimmed, 10);
+        if (!isNaN(id)) {
+          ids.push(id);
+        }
+      }
+    }
+  }
+
+  return ids;
+}
+
+export function replacePromptVariables(
+  prompt: string,
+  brandName: string,
+  primaryLocation?: { city: string; region: string; country: string },
+  customVariables?: Record<string, string>
+): string {
+  let result = prompt.replace(/\{\{name\}\}/g, brandName);
+
+  if (primaryLocation) {
+    const locationString = [
+      primaryLocation.city,
+      primaryLocation.region,
+      primaryLocation.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    result = result.replace(/\{\{primary_location\}\}/g, locationString);
+  }
+
+  if (customVariables) {
+    for (const [key, value] of Object.entries(customVariables)) {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+      result = result.replace(regex, value);
+    }
+  }
+
+  return result;
+}
