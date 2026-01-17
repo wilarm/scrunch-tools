@@ -10,6 +10,7 @@
     { "src": "/export/(.*)", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
     { "src": "/export", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
 
+    { "src": "/scrunch_primary_logo_(dark).svg", "dest": "/apps/home/scrunch_primary_logo_(dark).svg" },
     { "src": "/(.*)", "dest": "/apps/home/index.html" }
   ]
 }
