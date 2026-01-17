@@ -597,7 +597,7 @@ function App() {
                   Back
                 </button>
               )}
-              <img src="/scrunch_primary_logo_(dark).svg" alt="Scrunch" className="h-8" />
+              <img src={`${import.meta.env.BASE_URL}scrunch_primary_logo_(dark).svg`} alt="Scrunch" className="h-8" />
               <span className="text-sm text-gray-600">Bulk configuration tool</span>
             </div>
             <div className="relative">
