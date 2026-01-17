@@ -1,0 +1,25 @@
+{
+  "builds": [
+    {
+      "src": "apps/scrunch-api-exporter/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "apps/bulk-setup/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "src": "/export/assets/(.*)", "dest": "/apps/scrunch-api-exporter/dist/assets/$1" },
+    { "src": "/export/(.*)", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
+    { "src": "/export", "dest": "/apps/scrunch-api-exporter/dist/index.html" },
+
+    { "src": "/bulk-setup/assets/(.*)", "dest": "/apps/bulk-setup/dist/assets/$1" },
+    { "src": "/bulk-setup/(.*)", "dest": "/apps/bulk-setup/dist/index.html" },
+    { "src": "/bulk-setup", "dest": "/apps/bulk-setup/dist/index.html" },
+
+    { "src": "/", "dest": "/apps/home/index.html" }
+  ]
+}
