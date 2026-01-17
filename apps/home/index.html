@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrunch Tools</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #fff; margin: 0; }
+      .wrap { max-width: 960px; margin: 80px auto; padding: 0 24px; }
+      h1 { font-size: 28px; margin: 0 0 10px; }
+      p { color: #444; margin: 0 0 24px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .card { border: 1px solid #eee; border-radius: 14px; padding: 18px; }
+      .card h2 { margin: 0 0 8px; font-size: 18px; }
+      .card p { margin: 0 0 12px; color: #555; }
+      a.btn { display: inline-block; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; text-decoration: none; color: #111; }
+      a.btn:hover { background: #fafafa; }
+      @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Scrunch Tools</h1>
+      <p>Select a workflow to get started.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Bulk Brand & Prompt Setup</h2>
+          <p>Create or update brands and prompts in bulk.</p>
+          <a class="btn" href="/bulk-setup/">Open bulk setup</a>
+        </div>
+
+        <div class="card">
+          <h2>API Exporter to CSV</h2>
+          <p>Export Scrunch API data into a CSV for reporting.</p>
+          <a class="btn" href="/export/">Open exporter</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
