@@ -22,7 +22,7 @@ type WorkflowType = 'none' | 'brands' | 'prompts';
 function App() {
   const [activeWorkflow, setActiveWorkflow] = useState<WorkflowType>('none');
   const [apiKey, setApiKey] = useState('');
-  const [openaiKey, setOpenaiKey] = useState('import.meta.env.VITE_OPENAI_API_KEY || ''');
+  const [openaiKey, setOpenaiKey] = useState(import.meta.env.VITE_OPENAI_API_KEY || '');
   const [websiteInput, setWebsiteInput] = useState('');
   const [template, setTemplate] = useState<TemplateConfig>({
     descriptionTemplate: '',
