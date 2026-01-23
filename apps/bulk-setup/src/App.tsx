@@ -9,6 +9,7 @@ import { BrandIdInput } from './components/BrandIdInput';
 import { PromptPreviewTable, PromptVariant } from './components/PromptPreviewTable';
 import { CustomVariablesInput } from './components/CustomVariablesInput';
 import { VariationSidebar } from './components/VariationSidebar';
+import { AdvancedOptionsSidebar } from './components/AdvancedOptionsSidebar';
 import { BrandSubmissionState, TemplateConfig, PromptStage, PromptPlatform, PromptSubmissionState } from './types/brand';
 import { parseWebsites, generateBrands, reapplyTemplatesWithLocation } from './utils/brandGenerator';
 import { createBrand, createPrompt } from './utils/api';
@@ -52,9 +53,13 @@ function App() {
   const [promptVariations, setPromptVariations] = useState<Record<string, string[]>>({});
   const [sidebarPrompt, setSidebarPrompt] = useState<string | null>(null);
   const [variationInput, setVariationInput] = useState('');
+  const [allowCommaSeparation, setAllowCommaSeparation] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [perPromptTags, setPerPromptTags] = useState('');
+  const [perPromptStages, setPerPromptStages] = useState('');
 
   const websites = useMemo(() => parseWebsites(websiteInput), [websiteInput]);
-  const prompts = useMemo(() => parsePrompts(promptInput), [promptInput]);
+  const prompts = useMemo(() => parsePrompts(promptInput, allowCommaSeparation), [promptInput, allowCommaSeparation]);
   const brandIds = useMemo(() => parseBrandIds(brandIdInput), [brandIdInput]);
 
   const toggleSection = (section: 'config' | 'preview' | 'prompts') => {
@@ -396,19 +401,48 @@ function App() {
       return;
     }
 
+    // Parse per-prompt advanced options
+    const perPromptTagsArray = perPromptTags
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    const perPromptStagesArray = perPromptStages
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    // Validate advanced options length if provided
+    if (perPromptTagsArray.length > 0 && perPromptTagsArray.length !== prompts.length) {
+      alert(`Per-prompt tags count (${perPromptTagsArray.length}) must match prompts count (${prompts.length})`);
+      return;
+    }
+
+    if (perPromptStagesArray.length > 0 && perPromptStagesArray.length !== prompts.length) {
+      alert(`Per-prompt stages count (${perPromptStagesArray.length}) must match prompts count (${prompts.length})`);
+      return;
+    }
+
     const tagsArray = promptTags
       .split(',')
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
     const expandedPrompts: string[] = [];
-    for (const prompt of prompts) {
+    const promptIndexMap: number[] = []; // Track original prompt index for each expanded prompt
+    for (let i = 0; i < prompts.length; i++) {
+      const prompt = prompts[i];
       if (containsAllVariablesToken(prompt)) {
         const variations = promptVariations[prompt] || [];
         const expanded = expandTemplatePrompt(prompt, variations);
         expandedPrompts.push(...expanded);
+        // Map all expanded variations to the same original prompt index
+        for (let j = 0; j < expanded.length; j++) {
+          promptIndexMap.push(i);
+        }
       } else {
         expandedPrompts.push(prompt);
+        promptIndexMap.push(i);
       }
     }
 
@@ -418,7 +452,27 @@ function App() {
     for (const brandId of targetBrandIds) {
       const brand = brands.find(b => b.brandApiId === brandId);
 
-      for (const seedPrompt of expandedPrompts) {
+      for (let expandedIndex = 0; expandedIndex < expandedPrompts.length; expandedIndex++) {
+        const seedPrompt = expandedPrompts[expandedIndex];
+        const originalPromptIndex = promptIndexMap[expandedIndex];
+
+        // Determine tags and stage for this prompt
+        let promptSpecificTags: string[] = tagsArray;
+        let promptSpecificStage: PromptStage | undefined = promptStage ? (promptStage as PromptStage) : undefined;
+
+        // Override with per-prompt values if provided
+        if (perPromptTagsArray.length > 0) {
+          promptSpecificTags = perPromptTagsArray[originalPromptIndex]
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0);
+        }
+
+        if (perPromptStagesArray.length > 0) {
+          const stageValue = perPromptStagesArray[originalPromptIndex];
+          promptSpecificStage = stageValue ? (stageValue as PromptStage) : undefined;
+        }
+
         for (const platform of promptPlatforms) {
           const processedPrompt = brand
             ? replacePromptVariables(seedPrompt, brand.name, brand.primaryLocation, customVariables)
@@ -432,8 +486,8 @@ function App() {
             seedPrompt,
             processedPrompt,
             platform,
-            stage: promptStage ? (promptStage as PromptStage) : undefined,
-            tags: tagsArray,
+            stage: promptSpecificStage,
+            tags: promptSpecificTags,
             status: 'pending',
           });
         }
@@ -884,6 +938,8 @@ function App() {
                   customVariables={customVariables}
                   promptVariations={promptVariations}
                   onOpenVariationSidebar={handleOpenVariationSidebar}
+                  allowCommaSeparation={allowCommaSeparation}
+                  onAllowCommaSeparationChange={setAllowCommaSeparation}
                 />
 
                 <CustomVariablesInput
@@ -897,7 +953,7 @@ function App() {
                   <div className="space-y-6">
                     <div>
                       <label htmlFor="prompt-tags" className="block text-sm font-medium text-foreground mb-2">
-                        Tags <span className="text-muted-foreground text-xs">(optional)</span>
+                        Tags <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
                       </label>
                       <input
                         id="prompt-tags"
@@ -914,7 +970,7 @@ function App() {
 
                     <div>
                       <label htmlFor="prompt-stage" className="block text-sm font-medium text-foreground mb-2">
-                        Stage <span className="text-muted-foreground text-xs">(optional)</span>
+                        Stage <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
                       </label>
                       <select
                         id="prompt-stage"
@@ -929,6 +985,15 @@ function App() {
                         <option value="Advice">Advice</option>
                         <option value="Other">Other</option>
                       </select>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options (per-prompt configuration)
+                      </button>
                     </div>
                   </div>
 
@@ -1091,6 +1156,23 @@ function App() {
             variations={promptVariations[sidebarPrompt] || []}
             onVariationsChange={handleUpdateVariations}
             onClose={handleCloseSidebar}
+          />
+        </>
+      )}
+
+      {showAdvancedOptions && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            onClick={() => setShowAdvancedOptions(false)}
+          />
+          <AdvancedOptionsSidebar
+            promptCount={prompts.length}
+            perPromptTags={perPromptTags}
+            perPromptStages={perPromptStages}
+            onPerPromptTagsChange={setPerPromptTags}
+            onPerPromptStagesChange={setPerPromptStages}
+            onClose={() => setShowAdvancedOptions(false)}
           />
         </>
       )}

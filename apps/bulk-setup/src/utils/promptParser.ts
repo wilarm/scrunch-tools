@@ -1,4 +1,4 @@
-export function parsePrompts(input: string): string[] {
+export function parsePrompts(input: string, allowCommaSeparation: boolean = false): string[] {
   if (!input || !input.trim()) {
     return [];
   }
@@ -7,9 +7,16 @@ export function parsePrompts(input: string): string[] {
   const prompts: string[] = [];
 
   for (const line of lines) {
-    const commaSeparated = line.split(',');
-    for (const item of commaSeparated) {
-      const trimmed = item.trim();
+    if (allowCommaSeparation) {
+      const commaSeparated = line.split(',');
+      for (const item of commaSeparated) {
+        const trimmed = item.trim();
+        if (trimmed) {
+          prompts.push(trimmed);
+        }
+      }
+    } else {
+      const trimmed = line.trim();
       if (trimmed) {
         prompts.push(trimmed);
       }

@@ -11,6 +11,8 @@ interface PromptInputProps {
   customVariables?: Record<string, string>;
   promptVariations?: Record<string, string[]>;
   onOpenVariationSidebar?: (prompt: string) => void;
+  allowCommaSeparation?: boolean;
+  onAllowCommaSeparationChange?: (value: boolean) => void;
 }
 
 export function PromptInput({
@@ -20,11 +22,13 @@ export function PromptInput({
   platformCount,
   customVariables,
   promptVariations = {},
-  onOpenVariationSidebar
+  onOpenVariationSidebar,
+  allowCommaSeparation = false,
+  onAllowCommaSeparationChange
 }: PromptInputProps) {
   const promptVariants = promptCount * platformCount;
   const customVarEntries = customVariables ? Object.entries(customVariables) : [];
-  const prompts = useMemo(() => parsePrompts(value), [value]);
+  const prompts = useMemo(() => parsePrompts(value, allowCommaSeparation), [value, allowCommaSeparation]);
 
   const promptsWithValidation = useMemo(() => {
     return prompts
@@ -49,7 +53,7 @@ export function PromptInput({
           id="prompt-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Enter prompts (one per line or comma-separated)&#10;Example: What are the best {{name}} alternatives in {{primary_location}}?&#10;&#10;For multiple variations from one template:&#10;What is the best tax software for {{multiple}}?"
+          placeholder="Enter prompts (one per line)&#10;Example: What are the best {{name}} alternatives in {{primary_location}}?&#10;&#10;For multiple variations from one template:&#10;What is the best tax software for {{multiple}}?"
           rows={8}
           className="w-full px-4 py-3 pr-24 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
         />
@@ -114,9 +118,20 @@ export function PromptInput({
         </div>
       )}
 
-      <div className="mt-3 space-y-1">
+      <div className="mt-3 space-y-2">
+        {onAllowCommaSeparationChange && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allowCommaSeparation}
+              onChange={(e) => onAllowCommaSeparationChange(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Allow comma-separated prompts</span>
+          </label>
+        )}
         <p className="text-xs text-gray-600">
-          Separate prompts with commas or line breaks. Use variables:
+          Separate prompts with {allowCommaSeparation ? 'commas or line breaks' : 'line breaks'}. Use variables:
         </p>
         <div className="flex flex-wrap gap-2">
           <code className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">
