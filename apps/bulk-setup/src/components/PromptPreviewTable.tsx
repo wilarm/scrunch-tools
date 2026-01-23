@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, X, Loader2, ChevronDown, ChevronRight, Sparkles, Settings } from 'lucide-react';
 import { PromptPlatform, PromptStage, SubmissionStatus } from '../types/brand';
 
 export interface PromptVariant {
@@ -14,10 +14,16 @@ export interface PromptVariant {
   tags: string[];
   status: SubmissionStatus;
   errorMessage?: string;
+  enrichmentStatus?: 'loading' | 'enriched' | 'error';
+  enrichmentConfidence?: number;
+  manualBrandName?: string;
+  manualPrimaryLocation?: string;
 }
 
 interface PromptPreviewTableProps {
   variants: PromptVariant[];
+  onUpdateVariant?: (variantId: string, updates: Partial<PromptVariant>) => void;
+  onOpenBrandConfig?: (brandId: number) => void;
 }
 
 interface GroupedVariants {
@@ -47,8 +53,9 @@ const platformColors: Record<PromptPlatform, { bg: string; text: string }> = {
   copilot: { bg: 'bg-pink-200', text: 'text-pink-900' },
 };
 
-export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
+export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfig }: PromptPreviewTableProps) {
   const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
+  const [editingVariant, setEditingVariant] = useState<string | null>(null);
 
   const groupedVariants: GroupedVariants[] = variants.reduce((acc, variant) => {
     const existing = acc.find(g => g.seedPrompt === variant.seedPrompt);
@@ -85,16 +92,16 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
     }
   };
 
-  const getStatusColor = (status: SubmissionStatus) => {
+  const getVariantRowColor = (status: SubmissionStatus) => {
     switch (status) {
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'bg-green-50';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-50';
       case 'loading':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-blue-50';
       default:
-        return 'bg-white border-gray-200';
+        return 'bg-white';
     }
   };
 
@@ -107,21 +114,70 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
     return { successCount, errorCount, loadingCount, totalCount };
   };
 
+  const getGroupSubmissionColor = (groupVariants: PromptVariant[]) => {
+    const summary = getGroupStatusSummary(groupVariants);
+
+    // All succeeded - green
+    if (summary.successCount === summary.totalCount) {
+      return 'bg-green-50 border-l-4 border-l-green-500';
+    }
+
+    // All failed - red
+    if (summary.errorCount === summary.totalCount) {
+      return 'bg-red-50 border-l-4 border-l-red-500';
+    }
+
+    // Partial success - yellow
+    if (summary.successCount > 0 && summary.errorCount > 0) {
+      return 'bg-yellow-50 border-l-4 border-l-yellow-500';
+    }
+
+    // Default (not submitted yet)
+    return 'bg-white';
+  };
+
+  const getEnrichmentSummary = (groupVariants: PromptVariant[]) => {
+    // Get unique brands per group
+    const brandIds = new Set(groupVariants.map(v => v.brandId));
+    const brandEnrichmentStatus = new Map<number, 'loading' | 'enriched' | 'error' | undefined>();
+
+    // Determine enrichment status per brand
+    for (const variant of groupVariants) {
+      if (!brandEnrichmentStatus.has(variant.brandId)) {
+        brandEnrichmentStatus.set(variant.brandId, variant.enrichmentStatus);
+      }
+    }
+
+    const enrichedCount = Array.from(brandEnrichmentStatus.values()).filter(s => s === 'enriched').length;
+    const enrichingCount = Array.from(brandEnrichmentStatus.values()).filter(s => s === 'loading').length;
+    const enrichErrorCount = Array.from(brandEnrichmentStatus.values()).filter(s => s === 'error').length;
+    const totalBrands = brandIds.size;
+
+    return { enrichedCount, enrichingCount, enrichErrorCount, totalBrands };
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <div className="divide-y divide-gray-200">
         {groupedVariants.map((group, groupIdx) => {
           const isExpanded = expandedPrompts.has(group.seedPrompt);
           const summary = getGroupStatusSummary(group.variants);
+          const enrichment = getEnrichmentSummary(group.variants);
           const uniqueBrands = new Set(group.variants.map(v => v.brandName)).size;
           const uniquePlatforms = new Set(group.variants.map(v => v.platform)).size;
 
+          const groupColor = getGroupSubmissionColor(group.variants);
+
+          // Get unique brands in this group for the config button
+          const uniqueBrandIds = Array.from(new Set(group.variants.map(v => v.brandId)));
+
           return (
-            <div key={groupIdx} className="bg-white">
-              <button
-                onClick={() => togglePrompt(group.seedPrompt)}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
-              >
+            <div key={groupIdx} className={groupColor}>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => togglePrompt(group.seedPrompt)}
+                  className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+                >
                 <div className="flex-shrink-0">
                   {isExpanded ? (
                     <ChevronDown className="w-5 h-5 text-gray-500" />
@@ -139,9 +195,32 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
                     <span>{uniquePlatforms} platform{uniquePlatforms !== 1 ? 's' : ''}</span>
                     <span>•</span>
                     <span>{summary.totalCount} variant{summary.totalCount !== 1 ? 's' : ''}</span>
+                    {(enrichment.enrichedCount > 0 || enrichment.enrichingCount > 0 || enrichment.enrichErrorCount > 0) && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          {enrichment.enrichedCount}/{enrichment.totalBrands} enriched
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {enrichment.enrichingCount > 0 && (
+                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium" title="Brands being enriched">
+                      <Sparkles className="w-3 h-3" />
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      {enrichment.enrichingCount}
+                    </span>
+                  )}
+                  {enrichment.enrichErrorCount > 0 && (
+                    <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium" title="Enrichment errors">
+                      <Sparkles className="w-3 h-3" />
+                      <X className="w-3 h-3" />
+                      {enrichment.enrichErrorCount}
+                    </span>
+                  )}
                   {summary.successCount > 0 && (
                     <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
                       <Check className="w-3 h-3" />
@@ -162,6 +241,20 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
                   )}
                 </div>
               </button>
+              {uniqueBrandIds.length === 1 && onOpenBrandConfig && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenBrandConfig(uniqueBrandIds[0]);
+                  }}
+                  className="px-3 py-2 mr-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors flex items-center gap-1.5"
+                  title="Configure brand overrides"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="hidden sm:inline">Brand Config</span>
+                </button>
+              )}
+              </div>
 
               {isExpanded && (
                 <div className="border-t border-gray-200">
@@ -170,10 +263,16 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
-                            Status
+                            <Sparkles className="w-4 h-4 mx-auto" title="Enrichment Status" />
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
+                            <Check className="w-4 h-4 mx-auto" title="Submission Status" />
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Brand
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16" title="Confidence Score (0-10)">
+                            Conf.
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Processed Prompt
@@ -191,7 +290,20 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {group.variants.map((variant) => (
-                          <tr key={variant.id} className={getStatusColor(variant.status)}>
+                          <tr key={variant.id} className={getVariantRowColor(variant.status)}>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              <div className="flex items-center justify-center">
+                                {variant.enrichmentStatus === 'loading' && (
+                                  <Loader2 className="w-4 h-4 text-blue-600 animate-spin" title="Enriching..." />
+                                )}
+                                {variant.enrichmentStatus === 'enriched' && (
+                                  <Check className="w-4 h-4 text-green-600" title="Enriched" />
+                                )}
+                                {variant.enrichmentStatus === 'error' && (
+                                  <X className="w-4 h-4 text-red-600" title="Enrichment failed" />
+                                )}
+                              </div>
+                            </td>
                             <td className="px-4 py-2 whitespace-nowrap">
                               <div className="flex items-center justify-center">
                                 {getStatusIcon(variant.status)}
@@ -199,9 +311,52 @@ export function PromptPreviewTable({ variants }: PromptPreviewTableProps) {
                             </td>
                             <td className="px-4 py-2">
                               <div className="text-sm">
-                                <div className="font-medium text-gray-900">{variant.brandName}</div>
+                                {editingVariant === variant.id ? (
+                                  <input
+                                    type="text"
+                                    className="w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={variant.manualBrandName ?? variant.brandName}
+                                    onChange={(e) => onUpdateVariant?.(variant.id, { manualBrandName: e.target.value })}
+                                    onBlur={() => setEditingVariant(null)}
+                                    autoFocus
+                                    placeholder="Brand name"
+                                  />
+                                ) : (
+                                  <div
+                                    className="font-medium text-gray-900 cursor-text hover:bg-gray-50 px-2 py-1 rounded"
+                                    onClick={() => setEditingVariant(variant.id)}
+                                    title="Click to edit brand name"
+                                  >
+                                    {variant.manualBrandName || variant.brandName}
+                                    {variant.manualBrandName && (
+                                      <span className="ml-1 text-xs text-blue-600" title="Manually overridden">✓</span>
+                                    )}
+                                  </div>
+                                )}
                                 <div className="text-gray-500 text-xs">{variant.brandWebsite}</div>
                               </div>
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400"
+                                value={variant.manualPrimaryLocation ?? ''}
+                                onChange={(e) => onUpdateVariant?.(variant.id, { manualPrimaryLocation: e.target.value })}
+                                placeholder="e.g., Miami, FL"
+                              />
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-center">
+                              {variant.enrichmentConfidence !== undefined ? (
+                                <span className={`text-sm font-medium ${
+                                  variant.enrichmentConfidence >= 8 ? 'text-green-600' :
+                                  variant.enrichmentConfidence >= 5 ? 'text-yellow-600' :
+                                  'text-red-600'
+                                }`}>
+                                  {variant.enrichmentConfidence.toFixed(1)}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-2">
                               <div className="text-sm text-gray-900 font-mono max-w-md">

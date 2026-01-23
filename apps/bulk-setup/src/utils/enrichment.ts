@@ -3,14 +3,12 @@ import { EnrichmentResult } from '../types/brand';
 export async function enrichWebsite(
   website: string
 ): Promise<EnrichmentResult> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const proxyUrl = 'http://localhost:3001/api/scrunch/enrich';
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/enrich`, {
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
     },
     body: JSON.stringify({ website }),
   });

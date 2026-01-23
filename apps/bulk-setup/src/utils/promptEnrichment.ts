@@ -1,13 +1,20 @@
 import { listBrands, BrandListing } from '../lib/scrunchApi';
-import { enrichWebsite } from './enrichment';
 import { PromptVariant } from '../components/PromptPreviewTable';
 import { replacePromptVariables } from './promptParser';
+
+// Simplified enrichment result for prompt enrichment (only returns primary_location as string)
+interface PromptEnrichmentResult {
+  primary_location: string;
+  confidence?: number;
+}
 
 export interface PromptEnrichmentProgress {
   brandId: number;
   name?: string;
   primaryLocation?: string;
+  confidence?: number;
   error?: string;
+  status?: 'loading' | 'success' | 'error';
 }
 
 export async function enrichPromptVariants(
@@ -44,25 +51,55 @@ export async function enrichPromptVariants(
       console.warn(`Brand ID ${brandId} not found in organization`);
       onProgress({
         brandId,
+        status: 'error',
         error: `Brand ID ${brandId} not found in your organization`,
       });
       continue;
     }
 
     console.log(`Enriching brand ${brandId} (${brand.name}) from website: ${brand.website}`);
+
+    // Report loading state
+    onProgress({
+      brandId,
+      status: 'loading',
+      name: brand.name,
+    });
+
     try {
-      const enrichmentResult = await enrichWebsite(brand.website);
-      console.log(`Successfully enriched brand ${brandId}`);
+      // Call the proxy endpoint directly for prompt enrichment
+      const proxyUrl = 'http://localhost:3001/api/scrunch/enrich';
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          website: brand.website,
+          brandName: brand.name
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const enrichmentResult: PromptEnrichmentResult = await response.json();
+      console.log(`Successfully enriched brand ${brandId}, location: ${enrichmentResult.primary_location}, confidence: ${enrichmentResult.confidence}`);
 
       onProgress({
         brandId,
-        name: enrichmentResult.name,
+        status: 'success',
+        name: brand.name, // Use name from API, not from enrichment
         primaryLocation: enrichmentResult.primary_location,
+        confidence: enrichmentResult.confidence,
       });
     } catch (error) {
       console.error(`Failed to enrich brand ${brandId}:`, error);
       onProgress({
         brandId,
+        status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -74,18 +111,43 @@ export async function enrichPromptVariants(
 export function updateVariantsWithEnrichment(
   variants: PromptVariant[],
   brandId: number,
+  status?: 'loading' | 'success' | 'error',
   name?: string,
   primaryLocation?: string,
-  customVariables?: Record<string, string>
+  customVariables?: Record<string, string>,
+  error?: string,
+  confidence?: number
 ): PromptVariant[] {
   return variants.map(variant => {
     if (variant.brandId !== brandId) return variant;
 
-    const updatedName = name || variant.brandName;
+    // If just setting loading state, don't update the prompt yet
+    if (status === 'loading') {
+      return {
+        ...variant,
+        brandName: name || variant.brandName,
+        enrichmentStatus: 'loading' as const,
+      };
+    }
+
+    // If error occurred, keep existing state
+    if (status === 'error') {
+      return {
+        ...variant,
+        errorMessage: error,
+        enrichmentStatus: 'error' as const,
+      };
+    }
+
+    // Success: update the prompt with enriched data
+    // Use manual overrides if provided, otherwise use enriched values
+    const updatedName = variant.manualBrandName || name || variant.brandName;
+    const updatedLocation = variant.manualPrimaryLocation || primaryLocation;
+
     const processedPrompt = replacePromptVariables(
       variant.seedPrompt,
       updatedName,
-      primaryLocation,
+      updatedLocation,
       customVariables
     );
 
@@ -93,6 +155,8 @@ export function updateVariantsWithEnrichment(
       ...variant,
       brandName: updatedName,
       processedPrompt,
+      enrichmentStatus: 'enriched' as const,
+      enrichmentConfidence: confidence ? confidence * 10 : undefined, // Convert 0-1 to 0-10
     };
   });
 }

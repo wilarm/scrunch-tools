@@ -53,19 +53,29 @@ export function parseBrandIds(input: string): number[] {
 export function replacePromptVariables(
   prompt: string,
   brandName: string,
-  primaryLocation?: { city: string; region: string; country: string },
+  primaryLocation?: { city: string; region: string; country: string } | string,
   customVariables?: Record<string, string>
 ): string {
   let result = prompt.replace(/\{\{name\}\}/g, brandName);
+  result = result.replace(/\{\{brand_name\}\}/g, brandName);
 
   if (primaryLocation) {
-    const locationString = [
-      primaryLocation.city,
-      primaryLocation.region,
-      primaryLocation.country,
-    ]
-      .filter(Boolean)
-      .join(', ');
+    let locationString: string;
+
+    if (typeof primaryLocation === 'string') {
+      // Handle string format (e.g., "Miami, FL")
+      locationString = primaryLocation;
+    } else {
+      // Handle object format with city, region, country
+      locationString = [
+        primaryLocation.city,
+        primaryLocation.region,
+        primaryLocation.country,
+      ]
+        .filter(Boolean)
+        .join(', ');
+    }
+
     result = result.replace(/\{\{primary_location\}\}/g, locationString);
   }
 

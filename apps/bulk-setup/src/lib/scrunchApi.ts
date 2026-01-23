@@ -57,15 +57,14 @@ export async function listBrands(
   limit: number = 1000,
   offset: number = 0
 ): Promise<ListBrandsResponse> {
-  const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-brands`;
+  const proxyUrl = 'http://localhost:3001/api/scrunch/brands';
 
   let response: Response;
   try {
-    response = await fetch(edgeFunctionUrl, {
+    response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
         apiKey,
@@ -75,7 +74,7 @@ export async function listBrands(
     });
   } catch (error) {
     throw new Error(
-      `Network error while fetching brands. Please check your internet connection and API configuration. ${error instanceof Error ? error.message : ''}`
+      `Network error while fetching brands. Please check your internet connection and make sure the proxy server is running (npm run proxy). ${error instanceof Error ? error.message : ''}`
     );
   }
 
