@@ -886,8 +886,8 @@ function App() {
                           onClick={handleGeneratePreview}
                           disabled={!canGenerate}
                           className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${canGenerate
-                              ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                              : 'bg-muted text-muted-foreground cursor-not-allowed'
+                            ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                            : 'bg-muted text-muted-foreground cursor-not-allowed'
                             }`}
                         >
                           Generate Preview
@@ -935,8 +935,8 @@ function App() {
                               onClick={handleEnrichRows}
                               disabled={isEnriching}
                               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${!isEnriching
-                                  ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                                : 'bg-muted text-muted-foreground cursor-not-allowed'
                                 }`}
                             >
                               {isEnriching ? 'Enriching...' : 'Enrich Rows'}
@@ -980,8 +980,8 @@ function App() {
                                     onClick={handleRetryFailed}
                                     disabled={isSubmitting}
                                     className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${!isSubmitting
-                                        ? 'bg-[hsl(var(--middle))] text-white hover:opacity-90'
-                                        : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                      ? 'bg-[hsl(var(--middle))] text-white hover:opacity-90'
+                                      : 'bg-muted text-muted-foreground cursor-not-allowed'
                                       }`}
                                   >
                                     <Send className="w-4 h-4" />
@@ -992,8 +992,8 @@ function App() {
                                   onClick={handleSubmit}
                                   disabled={!canSubmit || (allCompleted && !hasFailures)}
                                   className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${canSubmit && !(allCompleted && !hasFailures)
-                                      ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                                    : 'bg-muted text-muted-foreground cursor-not-allowed'
                                     }`}
                                 >
                                   <Send className="w-4 h-4" />
@@ -1031,364 +1031,362 @@ function App() {
                   </button>
 
                   {expandedSections.prompts && (
-              <div className="p-6 space-y-6">
-                <BrandIdInput
-                  value={brandIdInput}
-                  onChange={setBrandIdInput}
-                  brandIdCount={brandIds.length}
-                />
-
-                <PromptInput
-                  value={promptInput}
-                  onChange={setPromptInput}
-                  promptCount={prompts.length}
-                  platformCount={promptPlatforms.length}
-                  customVariables={customVariables}
-                  promptVariations={promptVariations}
-                  onOpenVariationSidebar={handleOpenVariationSidebar}
-                  allowCommaSeparation={allowCommaSeparation}
-                  onAllowCommaSeparationChange={setAllowCommaSeparation}
-                />
-
-                <CustomVariablesInput
-                  variables={customVariables}
-                  onChange={setCustomVariables}
-                />
-
-                <div className="border-t border-gray-200 my-8"></div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                  <div className="space-y-6">
-                    <div>
-                      <label htmlFor="prompt-tags" className="block text-sm font-medium text-foreground mb-2">
-                        Tags <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
-                      </label>
-                      <input
-                        id="prompt-tags"
-                        type="text"
-                        value={promptTags}
-                        onChange={(e) => setPromptTags(e.target.value)}
-                        placeholder="Enter tags (comma-separated)"
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring outline-none bg-background text-foreground placeholder:text-muted-foreground"
+                    <div className="p-6 space-y-6">
+                      <BrandIdInput
+                        value={brandIdInput}
+                        onChange={setBrandIdInput}
+                        brandIdCount={brandIds.length}
                       />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Example: industry, product type, campaign name
-                      </p>
-                    </div>
 
-                    <div>
-                      <label htmlFor="prompt-stage" className="block text-sm font-medium text-foreground mb-2">
-                        Stage <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
-                      </label>
-                      <select
-                        id="prompt-stage"
-                        value={promptStage}
-                        onChange={(e) => setPromptStage(e.target.value as PromptStage | '')}
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring outline-none bg-background text-foreground"
-                      >
-                        <option value="">Select a stage</option>
-                        <option value="Awareness">Awareness</option>
-                        <option value="Evaluation">Evaluation</option>
-                        <option value="Comparison">Comparison</option>
-                        <option value="Advice">Advice</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
+                      <PromptInput
+                        value={promptInput}
+                        onChange={setPromptInput}
+                        promptCount={prompts.length}
+                        platformCount={promptPlatforms.length}
+                        customVariables={customVariables}
+                        promptVariations={promptVariations}
+                        onOpenVariationSidebar={handleOpenVariationSidebar}
+                        allowCommaSeparation={allowCommaSeparation}
+                        onAllowCommaSeparationChange={setAllowCommaSeparation}
+                      />
 
-                    <div className="pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                        {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options (per-prompt configuration)
-                      </button>
-                    </div>
-                  </div>
-                    
-                    <div className="pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => setShowAdvancedVariables(!showAdvancedVariables)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                         {showAdvancedVariables ? 'Hide' : 'Show'} Advanced Variables (per-brand configuration)
-                      </button>
-                    </div>
-                  </div>
+                      <CustomVariablesInput
+                        variables={customVariables}
+                        onChange={setCustomVariables}
+                      />
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Platforms
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['chatgpt', 'claude', 'perplexity', 'google_ai_overviews', 'meta', 'google_ai_mode', 'google_gemini', 'copilot'] as PromptPlatform[]).map((platform) => (
-                        <label key={platform} className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={promptPlatforms.includes(platform)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setPromptPlatforms([...promptPlatforms, platform]);
-                              } else {
-                                setPromptPlatforms(promptPlatforms.filter(p => p !== platform));
-                              }
-                            }}
-                            className="rounded border-input text-[hsl(var(--brand))] focus:ring-ring"
-                          />
-                          <span className="text-foreground capitalize">{platform.replace(/_/g, ' ')}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                      <div className="border-t border-gray-200 my-8"></div>
 
-                <div className="bg-card rounded-lg border border-border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">Generate Preview</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {prompts.length * promptPlatforms.length} prompt variant{(prompts.length * promptPlatforms.length) !== 1 ? 's' : ''} × {brandIds.length > 0 ? brandIds.length : successCount} brand{(brandIds.length > 0 ? brandIds.length : successCount) !== 1 ? 's' : ''} = {prompts.length * promptPlatforms.length * (brandIds.length > 0 ? brandIds.length : successCount)} total
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleGeneratePromptPreview}
-                      disabled={prompts.length === 0 || promptPlatforms.length === 0}
-                      className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${
-                        prompts.length > 0 && promptPlatforms.length > 0
-                          ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                          : 'bg-muted text-muted-foreground cursor-not-allowed'
-                      }`}
-                    >
-                      Generate Preview
-                    </button>
-                  </div>
-                </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <div className="space-y-6">
+                          <div>
+                            <label htmlFor="prompt-tags" className="block text-sm font-medium text-foreground mb-2">
+                              Tags <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
+                            </label>
+                            <input
+                              id="prompt-tags"
+                              type="text"
+                              value={promptTags}
+                              onChange={(e) => setPromptTags(e.target.value)}
+                              placeholder="Enter tags (comma-separated)"
+                              className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring outline-none bg-background text-foreground placeholder:text-muted-foreground"
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Example: industry, product type, campaign name
+                            </p>
+                          </div>
 
-                {hasGeneratedPrompts && promptVariants.length > 0 && (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-semibold text-foreground">
-                            Prompt Preview ({promptVariants.length} variants)
-                          </h3>
+                          <div>
+                            <label htmlFor="prompt-stage" className="block text-sm font-medium text-foreground mb-2">
+                              Stage <span className="text-muted-foreground text-xs">(optional, applies to all prompts)</span>
+                            </label>
+                            <select
+                              id="prompt-stage"
+                              value={promptStage}
+                              onChange={(e) => setPromptStage(e.target.value as PromptStage | '')}
+                              className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring outline-none bg-background text-foreground"
+                            >
+                              <option value="">Select a stage</option>
+                              <option value="Awareness">Awareness</option>
+                              <option value="Evaluation">Evaluation</option>
+                              <option value="Comparison">Comparison</option>
+                              <option value="Advice">Advice</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-200">
+                            <button
+                              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options (per-prompt configuration)
+                            </button>
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-200">
+                            <button
+                              onClick={() => setShowAdvancedVariables(!showAdvancedVariables)}
+                              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {showAdvancedVariables ? 'Hide' : 'Show'} Advanced Variables (per-brand configuration)
+                            </button>
+                          </div>
                         </div>
-                        <PromptPreviewTable
-                          variants={promptVariants}
-                          onUpdateVariant={handleUpdateVariant}
-                          onOpenBrandConfig={handleOpenBrandConfig}
-                        />
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">
+                            Platforms
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(['chatgpt', 'claude', 'perplexity', 'google_ai_overviews', 'meta', 'google_ai_mode', 'google_gemini', 'copilot'] as PromptPlatform[]).map((platform) => (
+                              <label key={platform} className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={promptPlatforms.includes(platform)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setPromptPlatforms([...promptPlatforms, platform]);
+                                    } else {
+                                      setPromptPlatforms(promptPlatforms.filter(p => p !== platform));
+                                    }
+                                  }}
+                                  className="rounded border-input text-[hsl(var(--brand))] focus:ring-ring"
+                                />
+                                <span className="text-foreground capitalize">{platform.replace(/_/g, ' ')}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="bg-card rounded-lg border border-border p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-foreground">Enrich with Brand Data</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Generate Preview</h3>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Fetch brand names and primary locations from your organization
+                              {prompts.length * promptPlatforms.length} prompt variant{(prompts.length * promptPlatforms.length) !== 1 ? 's' : ''} × {brandIds.length > 0 ? brandIds.length : successCount} brand{(brandIds.length > 0 ? brandIds.length : successCount) !== 1 ? 's' : ''} = {prompts.length * promptPlatforms.length * (brandIds.length > 0 ? brandIds.length : successCount)} total
                             </p>
                           </div>
                           <button
-                            onClick={handleEnrichPrompts}
-                            disabled={isEnrichingPrompts}
-                            className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${!isEnrichingPrompts
+                            onClick={handleGeneratePromptPreview}
+                            disabled={prompts.length === 0 || promptPlatforms.length === 0}
+                            className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${prompts.length > 0 && promptPlatforms.length > 0
                                 ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
                                 : 'bg-muted text-muted-foreground cursor-not-allowed'
                               }`}
                           >
-                            {isEnrichingPrompts ? 'Enriching...' : 'Enrich Prompts'}
+                            Generate Preview
                           </button>
                         </div>
-                        {isEnrichingPrompts && (
-                          <div className="mt-4 text-sm text-muted-foreground">
-                            Enriching prompts with brand data... Do not close this page.
-                          </div>
-                        )}
                       </div>
 
-                      <div className="bg-card rounded-lg border border-border p-6">
-                        <div className="flex items-center justify-between">
+                      {hasGeneratedPrompts && promptVariants.length > 0 && (
+                        <>
                           <div>
-                            <h3 className="text-lg font-semibold text-foreground">Submit All Prompts</h3>
-                            {(() => {
-                              const successCount = promptVariants.filter(v => v.status === 'success').length;
-                              const errorCount = promptVariants.filter(v => v.status === 'error').length;
-                              const allCompleted = promptVariants.every(v => v.status === 'success' || v.status === 'error');
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="text-sm font-semibold text-foreground">
+                                Prompt Preview ({promptVariants.length} variants)
+                              </h3>
+                            </div>
+                            <PromptPreviewTable
+                              variants={promptVariants}
+                              onUpdateVariant={handleUpdateVariant}
+                              onOpenBrandConfig={handleOpenBrandConfig}
+                            />
+                          </div>
 
-                              return allCompleted ? (
-                                <div className="mt-1">
-                                  {successCount === promptVariants.length ? (
-                                    <p className="text-sm text-[hsl(var(--positive))] font-medium">
-                                      Successfully created {successCount} of {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''}
-                                    </p>
-                                  ) : errorCount > 0 ? (
-                                    <p className="text-sm text-[hsl(var(--middle))] font-medium">
-                                      Created {successCount} of {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''}. {errorCount} failed.
-                                    </p>
-                                  ) : (
-                                    <p className="text-sm text-[hsl(var(--destructive))] font-medium">
-                                      All {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''} failed. Check errors above.
-                                    </p>
-                                  )}
-                                </div>
-                              ) : (
+                          <div className="bg-card rounded-lg border border-border p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground">Enrich with Brand Data</h3>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  Review the variants above and submit when ready
+                                  Fetch brand names and primary locations from your organization
                                 </p>
-                              );
-                            })()}
+                              </div>
+                              <button
+                                onClick={handleEnrichPrompts}
+                                disabled={isEnrichingPrompts}
+                                className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${!isEnrichingPrompts
+                                  ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                  }`}
+                              >
+                                {isEnrichingPrompts ? 'Enriching...' : 'Enrich Prompts'}
+                              </button>
+                            </div>
+                            {isEnrichingPrompts && (
+                              <div className="mt-4 text-sm text-muted-foreground">
+                                Enriching prompts with brand data... Do not close this page.
+                              </div>
+                            )}
                           </div>
-                          <button
-                            onClick={handleSubmitPrompts}
-                            disabled={isSubmittingPrompts || promptVariants.every(v => v.status === 'success' || v.status === 'error')}
-                            className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${!isSubmittingPrompts && !promptVariants.every(v => v.status === 'success' || v.status === 'error')
-                                ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                                : 'bg-muted text-muted-foreground cursor-not-allowed'
-                              }`}
-                          >
-                            <Send className="w-4 h-4" />
-                            {isSubmittingPrompts ? 'Creating Prompts...' : 'Submit All Prompts'}
-                          </button>
-                        </div>
-                        {isSubmittingPrompts && (
-                          <div className="mt-4 text-sm text-muted-foreground">
-                            Processing prompts... Do not close this page.
+
+                          <div className="bg-card rounded-lg border border-border p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground">Submit All Prompts</h3>
+                                {(() => {
+                                  const successCount = promptVariants.filter(v => v.status === 'success').length;
+                                  const errorCount = promptVariants.filter(v => v.status === 'error').length;
+                                  const allCompleted = promptVariants.every(v => v.status === 'success' || v.status === 'error');
+
+                                  return allCompleted ? (
+                                    <div className="mt-1">
+                                      {successCount === promptVariants.length ? (
+                                        <p className="text-sm text-[hsl(var(--positive))] font-medium">
+                                          Successfully created {successCount} of {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''}
+                                        </p>
+                                      ) : errorCount > 0 ? (
+                                        <p className="text-sm text-[hsl(var(--middle))] font-medium">
+                                          Created {successCount} of {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''}. {errorCount} failed.
+                                        </p>
+                                      ) : (
+                                        <p className="text-sm text-[hsl(var(--destructive))] font-medium">
+                                          All {promptVariants.length} prompt{promptVariants.length !== 1 ? 's' : ''} failed. Check errors above.
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      Review the variants above and submit when ready
+                                    </p>
+                                  );
+                                })()}
+                              </div>
+                              <button
+                                onClick={handleSubmitPrompts}
+                                disabled={isSubmittingPrompts || promptVariants.every(v => v.status === 'success' || v.status === 'error')}
+                                className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${!isSubmittingPrompts && !promptVariants.every(v => v.status === 'success' || v.status === 'error')
+                                  ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                  }`}
+                              >
+                                <Send className="w-4 h-4" />
+                                {isSubmittingPrompts ? 'Creating Prompts...' : 'Submit All Prompts'}
+                              </button>
+                            </div>
+                            {isSubmittingPrompts && (
+                              <div className="mt-4 text-sm text-muted-foreground">
+                                Processing prompts... Do not close this page.
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
+              </>
             )}
-              </div>
-          </>
-        )}
-    </div>
-  )
-}
+          </div>
+        )
+        }
       </main >
 
-  { sidebarPrompt && (
-    <>
-      <div
-        className="fixed inset-0 bg-black bg-opacity-30 z-40"
-        onClick={handleCloseSidebar}
-      />
-      <VariationSidebar
-        templatePrompt={sidebarPrompt}
-        variations={promptVariations[sidebarPrompt] || []}
-        onVariationsChange={handleUpdateVariations}
-        onClose={handleCloseSidebar}
-      />
-    </>
-  )}
+      {sidebarPrompt && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            onClick={handleCloseSidebar}
+          />
+          <VariationSidebar
+            templatePrompt={sidebarPrompt}
+            variations={promptVariations[sidebarPrompt] || []}
+            onVariationsChange={handleUpdateVariations}
+            onClose={handleCloseSidebar}
+          />
+        </>
+      )}
 
-{
-  brandConfigBrandId !== null && (() => {
-    const brand = promptVariants.find(v => v.brandId === brandConfigBrandId);
-    const overrides = brandOverrides[brandConfigBrandId] || {};
-    return brand ? (
-      <>
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-40"
-          onClick={handleCloseBrandConfig}
-        />
-        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Per-Brand Configuration</h2>
-            <p className="text-sm text-gray-500 mt-1">Override settings for {brand.brandName}</p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Name Override
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                defaultValue={overrides.name || ''}
-                placeholder={brand.brandName}
-                id="brand-name-override"
+      {
+        brandConfigBrandId !== null && (() => {
+          const brand = promptVariants.find(v => v.brandId === brandConfigBrandId);
+          const overrides = brandOverrides[brandConfigBrandId] || {};
+          return brand ? (
+            <>
+              <div
+                className="fixed inset-0 bg-black bg-opacity-30 z-40"
+                onClick={handleCloseBrandConfig}
               />
-              <p className="text-xs text-gray-500 mt-1">Leave empty to use enriched name</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Primary Location Override
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                defaultValue={overrides.location || ''}
-                placeholder="e.g., Miami, FL"
-                id="brand-location-override"
-              />
-              <p className="text-xs text-gray-500 mt-1">Leave empty to use enriched location</p>
-            </div>
-          </div>
-          <div className="p-6 border-t border-gray-200 flex gap-3">
-            <button
-              onClick={() => {
-                const nameInput = document.getElementById('brand-name-override') as HTMLInputElement;
-                const locationInput = document.getElementById('brand-location-override') as HTMLInputElement;
-                handleApplyBrandOverrides(
-                  brandConfigBrandId,
-                  nameInput?.value || undefined,
-                  locationInput?.value || undefined
-                );
-              }}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Apply to All Variants
-            </button>
-            <button
-              onClick={handleCloseBrandConfig}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </>
-    ) : null;
-  })()
-}
+              <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-semibold text-gray-900">Per-Brand Configuration</h2>
+                  <p className="text-sm text-gray-500 mt-1">Override settings for {brand.brandName}</p>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Brand Name Override
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      defaultValue={overrides.name || ''}
+                      placeholder={brand.brandName}
+                      id="brand-name-override"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty to use enriched name</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Primary Location Override
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      defaultValue={overrides.location || ''}
+                      placeholder="e.g., Miami, FL"
+                      id="brand-location-override"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty to use enriched location</p>
+                  </div>
+                </div>
+                <div className="p-6 border-t border-gray-200 flex gap-3">
+                  <button
+                    onClick={() => {
+                      const nameInput = document.getElementById('brand-name-override') as HTMLInputElement;
+                      const locationInput = document.getElementById('brand-location-override') as HTMLInputElement;
+                      handleApplyBrandOverrides(
+                        brandConfigBrandId,
+                        nameInput?.value || undefined,
+                        locationInput?.value || undefined
+                      );
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Apply to All Variants
+                  </button>
+                  <button
+                    onClick={handleCloseBrandConfig}
+                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : null;
+        })()
+      }
 
-{
-  showAdvancedOptions && (
-    <>
-      <div
-        className="fixed inset-0 bg-black bg-opacity-30 z-40"
-        onClick={() => setShowAdvancedOptions(false)}
-      />
-      <AdvancedOptionsSidebar
-        promptCount={prompts.length}
-        perPromptTags={perPromptTags}
-        perPromptStages={perPromptStages}
-        onPerPromptTagsChange={setPerPromptTags}
-        onPerPromptStagesChange={setPerPromptStages}
-        onClose={() => setShowAdvancedOptions(false)}
-      />
-    </>
-  )
-}
+      {
+        showAdvancedOptions && (
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-30 z-40"
+              onClick={() => setShowAdvancedOptions(false)}
+            />
+            <AdvancedOptionsSidebar
+              promptCount={prompts.length}
+              perPromptTags={perPromptTags}
+              perPromptStages={perPromptStages}
+              onPerPromptTagsChange={setPerPromptTags}
+              onPerPromptStagesChange={setPerPromptStages}
+              onClose={() => setShowAdvancedOptions(false)}
+            />
+          </>
+        )
+      }
 
-{
-  showAdvancedVariables && (
-    <>
-      <div
-        className="fixed inset-0 bg-black bg-opacity-30 z-40"
-        onClick={() => setShowAdvancedVariables(false)}
-      />
-      <AdvancedVariablesSidebar
-        brandCount={brands.length}
-        perBrandNames={perBrandNames}
-        perBrandLocations={perBrandLocations}
-        onPerBrandNamesChange={setPerBrandNames}
-        onPerBrandLocationsChange={setPerBrandLocations}
-        onClose={() => setShowAdvancedVariables(false)}
-      />
-    </>
-  )
-}
+      {
+        showAdvancedVariables && (
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-30 z-40"
+              onClick={() => setShowAdvancedVariables(false)}
+            />
+            <AdvancedVariablesSidebar
+              brandCount={brands.length}
+              perBrandNames={perBrandNames}
+              perBrandLocations={perBrandLocations}
+              onPerBrandNamesChange={setPerBrandNames}
+              onPerBrandLocationsChange={setPerBrandLocations}
+              onClose={() => setShowAdvancedVariables(false)}
+            />
+          </>
+        )
+      }
     </div >
   );
 }
