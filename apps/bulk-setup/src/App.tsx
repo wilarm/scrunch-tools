@@ -506,11 +506,7 @@ function App() {
       .filter((line) => line.length > 0);
 
     // Validate per-brand variables length if provided
-    const targetBrandCount = targetBrandIds.length > 0 ? targetBrandIds.length : allCompleted ? successCount : brands.length;
-
-    // Note: If brands haven't been generated yet, we use the input count or 0. 
-    // Ideally we should base this on the brands state if populated.
-    const effectiveBrandCount = brands.length > 0 ? brands.length : 0;
+    const effectiveBrandCount = brandIds.length > 0 ? brandIds.length : brands.length;
 
     if (perBrandNamesArray.length > 0 && perBrandNamesArray.length !== effectiveBrandCount) {
       alert(`Per-brand names count (${perBrandNamesArray.length}) must match brand count (${effectiveBrandCount})`);
@@ -548,10 +544,16 @@ function App() {
     const variants: PromptVariant[] = [];
     let variantIndex = 0;
 
-    for (const brandId of targetBrandIds) {
+    for (let i = 0; i < targetBrandIds.length; i++) {
+      const brandId = targetBrandIds[i];
       const brand = brands.find(b => b.brandApiId === brandId);
-      // Find the index of this brand in the brands array to map to manual variables
-      const brandIndex = brands.findIndex(b => b.brandApiId === brandId);
+
+      // Map manual overrides to brands
+      // If manually entering IDs, the overrides match that list's order
+      // If using the brands table, we match the original row order
+      const brandIndex = brandIds.length > 0
+        ? i
+        : brands.findIndex(b => b.brandApiId === brandId);
 
       const manualBrandName = (brandIndex >= 0 && perBrandNamesArray.length > brandIndex)
         ? perBrandNamesArray[brandIndex]
@@ -1152,8 +1154,8 @@ function App() {
                             onClick={handleGeneratePromptPreview}
                             disabled={prompts.length === 0 || promptPlatforms.length === 0}
                             className={`px-8 py-3 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm ${prompts.length > 0 && promptPlatforms.length > 0
-                                ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
-                                : 'bg-muted text-muted-foreground cursor-not-allowed'
+                              ? 'bg-[hsl(var(--brand))] text-white hover:opacity-90'
+                              : 'bg-muted text-muted-foreground cursor-not-allowed'
                               }`}
                           >
                             Generate Preview
@@ -1377,7 +1379,7 @@ function App() {
               onClick={() => setShowAdvancedVariables(false)}
             />
             <AdvancedVariablesSidebar
-              brandCount={brands.length}
+              brandCount={brandIds.length > 0 ? brandIds.length : brands.length}
               perBrandNames={perBrandNames}
               perBrandLocations={perBrandLocations}
               onPerBrandNamesChange={setPerBrandNames}
