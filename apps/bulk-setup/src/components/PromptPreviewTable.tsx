@@ -178,82 +178,82 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                   onClick={() => togglePrompt(group.seedPrompt)}
                   className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
                 >
-                <div className="flex-shrink-0">
-                  {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm text-gray-900 truncate">
-                    {group.seedPrompt}
-                  </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                    <span>{uniqueBrands} brand{uniqueBrands !== 1 ? 's' : ''}</span>
-                    <span>•</span>
-                    <span>{uniquePlatforms} platform{uniquePlatforms !== 1 ? 's' : ''}</span>
-                    <span>•</span>
-                    <span>{summary.totalCount} variant{summary.totalCount !== 1 ? 's' : ''}</span>
-                    {(enrichment.enrichedCount > 0 || enrichment.enrichingCount > 0 || enrichment.enrichErrorCount > 0) && (
-                      <>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          {enrichment.enrichedCount}/{enrichment.totalBrands} enriched
-                        </span>
-                      </>
+                  <div className="flex-shrink-0">
+                    {isExpanded ? (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-500" />
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {enrichment.enrichingCount > 0 && (
-                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium" title="Brands being enriched">
-                      <Sparkles className="w-3 h-3" />
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      {enrichment.enrichingCount}
-                    </span>
-                  )}
-                  {enrichment.enrichErrorCount > 0 && (
-                    <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium" title="Enrichment errors">
-                      <Sparkles className="w-3 h-3" />
-                      <X className="w-3 h-3" />
-                      {enrichment.enrichErrorCount}
-                    </span>
-                  )}
-                  {summary.successCount > 0 && (
-                    <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                      <Check className="w-3 h-3" />
-                      {summary.successCount}
-                    </span>
-                  )}
-                  {summary.loadingCount > 0 && (
-                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      {summary.loadingCount}
-                    </span>
-                  )}
-                  {summary.errorCount > 0 && (
-                    <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
-                      <X className="w-3 h-3" />
-                      {summary.errorCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              {uniqueBrandIds.length === 1 && onOpenBrandConfig && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenBrandConfig(uniqueBrandIds[0]);
-                  }}
-                  className="px-3 py-2 mr-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors flex items-center gap-1.5"
-                  title="Configure brand overrides"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span className="hidden sm:inline">Brand Config</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm text-gray-900 truncate">
+                      {group.seedPrompt}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <span>{uniqueBrands} brand{uniqueBrands !== 1 ? 's' : ''}</span>
+                      <span>•</span>
+                      <span>{uniquePlatforms} platform{uniquePlatforms !== 1 ? 's' : ''}</span>
+                      <span>•</span>
+                      <span>{summary.totalCount} variant{summary.totalCount !== 1 ? 's' : ''}</span>
+                      {(enrichment.enrichedCount > 0 || enrichment.enrichingCount > 0 || enrichment.enrichErrorCount > 0) && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            {enrichment.enrichedCount}/{enrichment.totalBrands} enriched
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {enrichment.enrichingCount > 0 && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium" title="Brands being enriched">
+                        <Sparkles className="w-3 h-3" />
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {enrichment.enrichingCount}
+                      </span>
+                    )}
+                    {enrichment.enrichErrorCount > 0 && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium" title="Enrichment errors">
+                        <Sparkles className="w-3 h-3" />
+                        <X className="w-3 h-3" />
+                        {enrichment.enrichErrorCount}
+                      </span>
+                    )}
+                    {summary.successCount > 0 && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                        <Check className="w-3 h-3" />
+                        {summary.successCount}
+                      </span>
+                    )}
+                    {summary.loadingCount > 0 && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {summary.loadingCount}
+                      </span>
+                    )}
+                    {summary.errorCount > 0 && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
+                        <X className="w-3 h-3" />
+                        {summary.errorCount}
+                      </span>
+                    )}
+                  </div>
                 </button>
-              )}
+                {uniqueBrandIds.length === 1 && onOpenBrandConfig && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenBrandConfig(uniqueBrandIds[0]);
+                    }}
+                    className="px-3 py-2 mr-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors flex items-center gap-1.5"
+                    title="Configure brand overrides"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline">Brand Config</span>
+                  </button>
+                )}
               </div>
 
               {isExpanded && (
@@ -262,14 +262,17 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
-                            <Sparkles className="w-4 h-4 mx-auto" title="Enrichment Status" />
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8" title="Enrichment Status">
+                            <Sparkles className="w-4 h-4 mx-auto" />
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
-                            <Check className="w-4 h-4 mx-auto" title="Submission Status" />
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8" title="Submission Status">
+                            <Check className="w-4 h-4 mx-auto" />
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Brand
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Location
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16" title="Confidence Score (0-10)">
                             Conf.
@@ -294,13 +297,13 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                             <td className="px-4 py-2 whitespace-nowrap">
                               <div className="flex items-center justify-center">
                                 {variant.enrichmentStatus === 'loading' && (
-                                  <Loader2 className="w-4 h-4 text-blue-600 animate-spin" title="Enriching..." />
+                                  <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
                                 )}
                                 {variant.enrichmentStatus === 'enriched' && (
-                                  <Check className="w-4 h-4 text-green-600" title="Enriched" />
+                                  <Check className="w-4 h-4 text-green-600" />
                                 )}
                                 {variant.enrichmentStatus === 'error' && (
-                                  <X className="w-4 h-4 text-red-600" title="Enrichment failed" />
+                                  <X className="w-4 h-4 text-red-600" />
                                 )}
                               </div>
                             </td>
@@ -347,11 +350,10 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-center">
                               {variant.enrichmentConfidence !== undefined ? (
-                                <span className={`text-sm font-medium ${
-                                  variant.enrichmentConfidence >= 8 ? 'text-green-600' :
+                                <span className={`text-sm font-medium ${variant.enrichmentConfidence >= 8 ? 'text-green-600' :
                                   variant.enrichmentConfidence >= 5 ? 'text-yellow-600' :
-                                  'text-red-600'
-                                }`}>
+                                    'text-red-600'
+                                  }`}>
                                   {variant.enrichmentConfidence.toFixed(1)}
                                 </span>
                               ) : (

@@ -665,7 +665,7 @@ function App() {
       try {
         await createPrompt(apiKey, group.brandId, {
           text: group.processedPrompt,
-          ...(group.stage && { stage: group.stage }),
+          stage: group.stage || 'Other',
           platforms: group.platforms,
           ...(group.tags.length > 0 && { tags: group.tags }),
         });

@@ -43,6 +43,76 @@ app.post('/api/scrunch/brands', async (req, res) => {
   }
 });
 
+// Proxy endpoint for creating a brand
+app.post('/api/scrunch/create-brand', async (req, res) => {
+  const { apiKey, payload } = req.body;
+
+  if (!apiKey) {
+    return res.status(400).json({ error: 'API key is required' });
+  }
+
+  try {
+    const url = 'https://api.scrunchai.com/v1/brands';
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Proxy endpoint for creating a prompt
+app.post('/api/scrunch/create-prompt', async (req, res) => {
+  const { apiKey, brandId, payload } = req.body;
+
+  if (!apiKey) {
+    return res.status(400).json({ error: 'API key is required' });
+  }
+
+  if (!brandId) {
+    return res.status(400).json({ error: 'Brand ID is required' });
+  }
+
+  try {
+    const url = `https://api.scrunchai.com/v1/${brandId}/prompts`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Proxy endpoint for enriching websites using OpenAI
 app.post('/api/scrunch/enrich', async (req, res) => {
   const { website, brandName } = req.body;

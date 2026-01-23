@@ -59,14 +59,12 @@ export async function createBrand(apiKey: string, brand: Brand): Promise<{ id: n
     key_topics: brand.key_topics ?? [],
   };
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const proxyUrl = 'http://localhost:3001/api/scrunch/create-brand';
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/create-brand`, {
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
     },
     body: JSON.stringify({ apiKey, payload }),
   });
@@ -102,14 +100,12 @@ export async function createPrompt(
     throw new Error('At least one platform is required');
   }
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const proxyUrl = 'http://localhost:3001/api/scrunch/create-prompt';
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/create-prompt`, {
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
     },
     body: JSON.stringify({ apiKey, brandId, payload: prompt }),
   });
