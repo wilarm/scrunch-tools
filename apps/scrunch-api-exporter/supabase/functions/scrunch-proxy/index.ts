@@ -255,6 +255,9 @@ Deno.serve(async (req: Request) => {
         url.searchParams.append("end_date", endDate);
         url.searchParams.append("limit", pageLimit.toString());
         url.searchParams.append("offset", currentOffset.toString());
+        if (fields && fields.length > 0) {
+          url.searchParams.append("fields", fields.join(","));
+        }
 
         const response = await fetch(url.toString(), {
           headers: {

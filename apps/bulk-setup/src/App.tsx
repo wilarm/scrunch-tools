@@ -1097,13 +1097,31 @@ function App() {
                             </select>
                           </div>
 
-                          <div className="pt-4 border-t border-gray-200">
+                          <div className="pt-4 border-t border-gray-200 space-y-3">
                             <button
                               onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors block"
                             >
                               {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options (per-prompt configuration)
                             </button>
+                            {hasGeneratedPrompts && promptVariants.length > 0 && (
+                              <button
+                                onClick={() => {
+                                  // Get unique brand IDs from current prompt variants
+                                  const uniqueBrandIds = Array.from(new Set(promptVariants.map(v => v.brandId)));
+                                  if (uniqueBrandIds.length === 1) {
+                                    handleOpenBrandConfig(uniqueBrandIds[0]);
+                                  } else if (uniqueBrandIds.length > 1) {
+                                    // For multiple brands, open config for the first one
+                                    // User can navigate to others via the table
+                                    alert('Multiple brands detected. Use the Brand Config button in each prompt group to configure individual brands.');
+                                  }
+                                }}
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors block"
+                              >
+                                Configure Brand Overrides
+                              </button>
+                            )}
                           </div>
 
                           <div className="pt-4 border-t border-gray-200">

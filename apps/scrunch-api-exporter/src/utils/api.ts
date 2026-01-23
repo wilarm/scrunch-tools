@@ -83,14 +83,8 @@ export function validateQueryFields(fields: string[]): { valid: boolean; error?:
 export async function fetchAndFlattenData(params: ExportParams): Promise<Record<string, unknown>[]> {
   const { apiKey, brandId, startDate, endDate, fetchAll = false, endpoint = 'responses', fields = [], onProgress } = params;
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !anonKey) {
-    throw new Error('Supabase configuration missing');
-  }
-
-  const proxyUrl = `${supabaseUrl}/functions/v1/scrunch-proxy`;
+  // Use local proxy server instead of Supabase
+  const proxyUrl = 'http://localhost:3002/api/scrunch-proxy';
 
   const allItems: Record<string, unknown>[] = [];
   let offset = 0;
@@ -108,7 +102,6 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${anonKey}`,
           },
           body: JSON.stringify({
             apiKey,
@@ -117,6 +110,7 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
             endDate,
             endpoint,
             fields,
+            fetchAll,
             limit: pageSize,
             offset,
           }),

@@ -90,6 +90,7 @@ app.post('/api/scrunch/create-prompt', async (req, res) => {
 
   try {
     const url = `https://api.scrunchai.com/v1/${brandId}/prompts`;
+    console.log(`POST to Scrunch: ${url}`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -100,9 +101,16 @@ app.post('/api/scrunch/create-prompt', async (req, res) => {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (e) {
+      data = { error: responseText || 'Empty or invalid JSON response from upstream' };
+    }
 
     if (!response.ok) {
+      console.error(`Upstream error ${response.status}:`, data);
       return res.status(response.status).json(data);
     }
 

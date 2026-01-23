@@ -59,7 +59,7 @@ function App() {
     params.append('limit', String(DEFAULT_LIMIT));
     params.append('offset', '0');
 
-    if (activeTab === 'query' && selectedFields.length > 0) {
+    if (selectedFields.length > 0) {
       params.append('fields', selectedFields.join(','));
     }
 

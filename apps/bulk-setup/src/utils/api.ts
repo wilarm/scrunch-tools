@@ -69,10 +69,16 @@ export async function createBrand(apiKey: string, brand: Brand): Promise<{ id: n
     body: JSON.stringify({ apiKey, payload }),
   });
 
-  const responseData = await response.json().catch(() => ({ error: 'Invalid response from server' }));
+  const responseText = await response.text().catch(() => '');
+  let responseData: any;
+  try {
+    responseData = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    responseData = { error: responseText || 'Invalid response from server' };
+  }
 
   if (!response.ok) {
-    const errorMessage = responseData.error || `HTTP ${response.status}: ${response.statusText}`;
+    const errorMessage = responseData.error || responseData.message || `HTTP ${response.status}: ${response.statusText}`;
     throw new Error(errorMessage);
   }
 
@@ -110,10 +116,16 @@ export async function createPrompt(
     body: JSON.stringify({ apiKey, brandId, payload: prompt }),
   });
 
-  const responseData = await response.json().catch(() => ({ error: 'Invalid response from server' }));
+  const responseText = await response.text().catch(() => '');
+  let responseData: any;
+  try {
+    responseData = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    responseData = { error: responseText || 'Invalid response from server' };
+  }
 
   if (!response.ok) {
-    const errorMessage = responseData.error || `HTTP ${response.status}: ${response.statusText}`;
+    const errorMessage = responseData.error || responseData.message || `HTTP ${response.status}: ${response.statusText}`;
     throw new Error(errorMessage);
   }
 

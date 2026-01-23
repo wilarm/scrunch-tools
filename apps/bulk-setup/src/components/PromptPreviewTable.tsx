@@ -241,19 +241,6 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                     )}
                   </div>
                 </button>
-                {uniqueBrandIds.length === 1 && onOpenBrandConfig && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenBrandConfig(uniqueBrandIds[0]);
-                    }}
-                    className="px-3 py-2 mr-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors flex items-center gap-1.5"
-                    title="Configure brand overrides"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline">Brand Config</span>
-                  </button>
-                )}
               </div>
 
               {isExpanded && (
@@ -270,9 +257,6 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Brand
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Location
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16" title="Confidence Score (0-10)">
                             Conf.
@@ -338,15 +322,6 @@ export function PromptPreviewTable({ variants, onUpdateVariant, onOpenBrandConfi
                                 )}
                                 <div className="text-gray-500 text-xs">{variant.brandWebsite}</div>
                               </div>
-                            </td>
-                            <td className="px-4 py-2">
-                              <input
-                                type="text"
-                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400"
-                                value={variant.manualPrimaryLocation ?? ''}
-                                onChange={(e) => onUpdateVariant?.(variant.id, { manualPrimaryLocation: e.target.value })}
-                                placeholder="e.g., Miami, FL"
-                              />
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-center">
                               {variant.enrichmentConfidence !== undefined ? (
