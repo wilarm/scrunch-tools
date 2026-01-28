@@ -83,8 +83,8 @@ export function validateQueryFields(fields: string[]): { valid: boolean; error?:
 export async function fetchAndFlattenData(params: ExportParams): Promise<Record<string, unknown>[]> {
   const { apiKey, brandId, startDate, endDate, fetchAll = false, endpoint = 'responses', fields = [], onProgress } = params;
 
-  // Use local proxy server instead of Supabase
-  const proxyUrl = 'http://localhost:3002/api/scrunch-proxy';
+  // Use Supabase Edge Function
+  const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
   const allItems: Record<string, unknown>[] = [];
   let offset = 0;

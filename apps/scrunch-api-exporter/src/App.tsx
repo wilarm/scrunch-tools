@@ -3,6 +3,13 @@ import { Download, Loader2, AlertCircle } from 'lucide-react';
 import { fetchAndFlattenData, generateCSV, validateQueryFields, DEFAULT_LIMIT } from './utils/api';
 import { ColumnSelector } from './components/ColumnSelector';
 import { QueryFieldSelector } from './components/QueryFieldSelector';
+import { RowExplosionWarningModal } from './components/RowExplosionWarningModal';
+
+// Many-to-many fields that can cause row explosion
+const MANY_TO_MANY_FIELDS = {
+  responses: ['tags', 'key_topics'],
+  query: ['prompt_topic', 'tag', 'source_url', 'source_type', 'competitor_id', 'competitor_name'],
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState<'responses' | 'query'>('query');
@@ -19,6 +26,7 @@ function App() {
   const [success, setSuccess] = useState('');
   const [showApiCall, setShowApiCall] = useState(false);
   const [apiCallUrl, setApiCallUrl] = useState('');
+  const [showRowExplosionWarning, setShowRowExplosionWarning] = useState(false);
   
   const manyToManyWarning = (
   <div className="border-t pt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -72,10 +80,25 @@ function App() {
     setShowApiCall(true);
   };
 
-  const handleExport = async () => {
+  const getSelectedManyToManyFields = (): string[] => {
+    const manyToManyList = MANY_TO_MANY_FIELDS[activeTab];
+    if (activeTab === 'responses') {
+      // For responses, check selectedColumns (or all columns if none selected)
+      const columnsToCheck = selectedColumns.length > 0 ? selectedColumns : [];
+      // If no columns selected, user gets all columns including many-to-many
+      if (columnsToCheck.length === 0) {
+        return manyToManyList; // All many-to-many fields will be included
+      }
+      return columnsToCheck.filter(col => manyToManyList.includes(col));
+    } else {
+      // For query, check selectedFields
+      return selectedFields.filter(field => manyToManyList.includes(field));
+    }
+  };
+
+  const handleExportClick = () => {
     setError('');
     setSuccess('');
-    setProgress(0);
 
     if (!apiKey || !brandId || !startDate || !endDate) {
       setError('API Key, Brand ID, Start Date, and End Date are required');
@@ -95,6 +118,28 @@ function App() {
       }
     }
 
+    // Check for multiple many-to-many fields
+    const selectedManyToMany = getSelectedManyToManyFields();
+    if (selectedManyToMany.length > 1) {
+      setShowRowExplosionWarning(true);
+      return;
+    }
+
+    // No warning needed, proceed with export
+    performExport();
+  };
+
+  const handleConfirmExport = () => {
+    setShowRowExplosionWarning(false);
+    performExport();
+  };
+
+  const handleCancelExport = () => {
+    setShowRowExplosionWarning(false);
+  };
+
+  const performExport = async () => {
+    setProgress(0);
     setLoading(true);
 
     try {
@@ -144,7 +189,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <RowExplosionWarningModal
+        isOpen={showRowExplosionWarning}
+        onConfirm={handleConfirmExport}
+        onCancel={handleCancelExport}
+        selectedFields={getSelectedManyToManyFields()}
+      />
+      <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
@@ -413,7 +465,7 @@ function App() {
             )}
 
             <button
-              onClick={handleExport}
+              onClick={handleExportClick}
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3.5 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
             >
@@ -433,6 +485,7 @@ function App() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
