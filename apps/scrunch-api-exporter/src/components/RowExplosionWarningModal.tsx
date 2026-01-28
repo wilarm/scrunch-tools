@@ -18,7 +18,7 @@ export function RowExplosionWarningModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
         <div className="bg-amber-50 px-6 py-4 border-b border-amber-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export function RowExplosionWarningModal({
 
         <div className="px-6 py-5">
           <p className="text-gray-700 mb-4">
-            You've selected multiple many-to-many fields that can create extra rows in your export:
+            You've selected multiple many-to-many fields:
           </p>
 
           <div className="flex flex-wrap gap-2 mb-4">
@@ -51,17 +51,26 @@ export function RowExplosionWarningModal({
           </div>
 
           <p className="text-gray-700 mb-4">
-            Each of these fields can have multiple values per response. When combined,
+            Each of these fields can have multiple values per response. When flattened together,
             this may significantly multiply the number of rows in your export (row explosion).
           </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-blue-800 font-medium mb-2">Best Practice</p>
+            <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+              <li>Only explode one array at a time</li>
+              <li>Create separate bridge tables for each many-to-many field</li>
+              <li>Use <code className="bg-blue-100 px-1 rounded">COUNT(DISTINCT response_id)</code> when joining</li>
+            </ul>
+          </div>
 
           <a
             href="https://helpcenter.scrunchai.com/en/articles/13133378-modeling-tags-from-the-responses-api-and-avoiding-row-explosion"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm mb-2"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
           >
-            Learn how to model these safely →
+            Learn how to model these safely in your warehouse →
           </a>
         </div>
 

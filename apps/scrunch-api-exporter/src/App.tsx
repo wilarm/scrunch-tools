@@ -7,8 +7,8 @@ import { RowExplosionWarningModal } from './components/RowExplosionWarningModal'
 
 // Many-to-many fields that can cause row explosion
 const MANY_TO_MANY_FIELDS = {
-  responses: ['tags', 'key_topics'],
-  query: ['prompt_topic', 'tag', 'source_url', 'source_type', 'competitor_id', 'competitor_name'],
+  responses: ['tags', 'key_topics', 'citations', 'competitors'],
+  query: ['ai_platform', 'tag', 'prompt_topic', 'competitor_id'],
 };
 
 function App() {
@@ -89,7 +89,16 @@ function App() {
       if (columnsToCheck.length === 0) {
         return manyToManyList; // All many-to-many fields will be included
       }
-      return columnsToCheck.filter(col => manyToManyList.includes(col));
+
+      // Check for many-to-many fields, including flattened citation_* and competitor_* columns
+      const foundFields: string[] = [];
+
+      if (columnsToCheck.includes('tags')) foundFields.push('tags');
+      if (columnsToCheck.includes('key_topics')) foundFields.push('key_topics');
+      if (columnsToCheck.some(col => col.startsWith('citation_'))) foundFields.push('citations');
+      if (columnsToCheck.some(col => col.startsWith('competitor_') || col === 'competitors_present')) foundFields.push('competitors');
+
+      return foundFields;
     } else {
       // For query, check selectedFields
       return selectedFields.filter(field => manyToManyList.includes(field));
