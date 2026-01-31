@@ -159,7 +159,9 @@ function App() {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
-            <img src="/slides/scrunch-logo.svg" alt="Scrunch" className="h-8" />
+            <a href="/" className="hover:opacity-80 transition-opacity">
+              <img src="/slides/scrunch-logo.svg" alt="Scrunch" className="h-8" />
+            </a>
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-orange-600" />
               <span className="text-lg font-semibold text-gray-900">Slides Generator</span>
