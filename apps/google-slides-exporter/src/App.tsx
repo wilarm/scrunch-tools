@@ -1,0 +1,448 @@
+import { useState, useEffect } from 'react';
+import { FileText, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import MetricsSelector from './components/MetricsSelector';
+import TemplatePreview from './components/TemplatePreview';
+import ProgressTracker from './components/ProgressTracker';
+import { fetchBrandMetrics, validateQueryFields, buildReplacements, QUERY_METRICS } from './utils/api';
+import { initiateGoogleAuth, isOAuthCallback, handleOAuthCallback } from './utils/oauth';
+import { validateTemplate, generateSlides, extractTemplateId } from './utils/slides';
+import { DEFAULT_TEMPLATE_ID } from './utils/constants';
+import type { FormState, TemplateInfo, GenerationStep } from './types';
+
+function App() {
+  // Handle OAuth callback
+  useEffect(() => {
+    if (isOAuthCallback()) {
+      handleOAuthCallback();
+    }
+  }, []);
+
+  const [formState, setFormState] = useState<FormState>({
+    apiKey: '',
+    brandId: '',
+    startDate: '',
+    endDate: '',
+    templateId: DEFAULT_TEMPLATE_ID,
+    metrics: [...QUERY_METRICS], // Default template has all metrics selected
+    slideName: '',
+  });
+
+  const [useCustomTemplate, setUseCustomTemplate] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [templateInfo, setTemplateInfo] = useState<TemplateInfo | null>(null);
+  const [isValidatingTemplate, setIsValidatingTemplate] = useState(false);
+  const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
+  const [error, setError] = useState<string>('');
+  const [slideLink, setSlideLink] = useState<string>('');
+
+  const updateForm = (field: keyof FormState, value: string | string[]) => {
+    setFormState(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleValidateTemplate = async () => {
+    if (!formState.templateId.trim()) {
+      setError('Please enter a template ID or URL');
+      return;
+    }
+
+    setIsValidatingTemplate(true);
+    setError('');
+    setTemplateInfo(null);
+
+    try {
+      // Get OAuth token
+      const accessToken = await initiateGoogleAuth();
+
+      // Validate template
+      const templateId = extractTemplateId(formState.templateId);
+      const info = await validateTemplate(accessToken, templateId);
+      setTemplateInfo(info);
+
+      // Update form with cleaned template ID
+      setFormState(prev => ({ ...prev, templateId }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Template validation failed');
+    } finally {
+      setIsValidatingTemplate(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    // Validation
+    if (!formState.apiKey.trim()) {
+      setError('Please enter your Scrunch API key');
+      return;
+    }
+    if (!formState.brandId.trim()) {
+      setError('Please enter a brand ID');
+      return;
+    }
+    if (!formState.startDate || !formState.endDate) {
+      setError('Please select a date range');
+      return;
+    }
+    if (!formState.templateId.trim()) {
+      setError('Please enter a template ID');
+      return;
+    }
+    if (!formState.slideName.trim()) {
+      setError('Please enter a name for your slides');
+      return;
+    }
+
+    // Only validate metrics for custom templates (default template has all metrics auto-selected)
+    if (useCustomTemplate) {
+      const validation = validateQueryFields(formState.metrics);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid metrics selection');
+        return;
+      }
+    }
+
+    setError('');
+    setSlideLink('');
+    setGenerationStep('authenticating');
+
+    try {
+      // Step 1: Authenticate
+      const accessToken = await initiateGoogleAuth();
+
+      // Step 2: Fetch data
+      setGenerationStep('fetching');
+      const data = await fetchBrandMetrics({
+        apiKey: formState.apiKey,
+        brandId: formState.brandId,
+        startDate: formState.startDate,
+        endDate: formState.endDate,
+        metrics: formState.metrics,
+      });
+
+      // Step 3: Generate slides
+      setGenerationStep('creating');
+      const replacements = buildReplacements(data, {
+        brandId: formState.brandId,
+        startDate: formState.startDate,
+        endDate: formState.endDate,
+      });
+
+      const templateId = extractTemplateId(formState.templateId);
+      const result = await generateSlides({
+        accessToken,
+        templateId,
+        slideName: formState.slideName,
+        replacements,
+      });
+
+      // Step 4: Done
+      setGenerationStep('done');
+      setSlideLink(result.link);
+    } catch (err) {
+      setGenerationStep('error');
+      setError(err instanceof Error ? err.message : 'Slide generation failed');
+    }
+  };
+
+  // Don't render main UI if on callback page
+  if (isOAuthCallback()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Completing authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/slides/scrunch-logo.svg" alt="Scrunch" className="h-8" />
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-orange-600" />
+              <span className="text-lg font-semibold text-gray-900">Slides Generator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6 text-white">
+            <h1 className="text-2xl font-bold mb-2">Create Google Slides Reports</h1>
+            <p className="text-orange-100 text-sm">
+              Generate branded presentations from your Scrunch API data
+            </p>
+          </div>
+
+          {/* Form */}
+          <div className="p-8 space-y-8">
+            {/* API Configuration */}
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                API Configuration
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Scrunch API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={formState.apiKey}
+                    onChange={e => updateForm('apiKey', e.target.value)}
+                    placeholder="Enter your Scrunch API key"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Brand ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formState.brandId}
+                    onChange={e => updateForm('brandId', e.target.value)}
+                    placeholder="e.g., my-brand-123"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formState.startDate}
+                      onChange={e => updateForm('startDate', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formState.endDate}
+                      onChange={e => updateForm('endDate', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Template Configuration */}
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                Slide Details
+              </h2>
+              <div className="space-y-4">
+                {!useCustomTemplate && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-900">
+                        <p className="font-medium mb-1">Using Scrunch default template</p>
+                        <p className="text-blue-700 text-xs">
+                          This template includes all standard brand metrics and is ready to use.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Output Slide Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formState.slideName}
+                    onChange={e => updateForm('slideName', e.target.value)}
+                    placeholder="e.g., Brand Report - Q1 2024"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Template Choice - Moved below Output Slide Name */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomTemplate(!useCustomTemplate);
+                      if (!useCustomTemplate) {
+                        // Switching TO custom template - clear metrics and template info
+                        setTemplateInfo(null);
+                        setFormState(prev => ({ ...prev, metrics: [] }));
+                      } else {
+                        // Switching back TO default template - restore all metrics
+                        setFormState(prev => ({
+                          ...prev,
+                          templateId: DEFAULT_TEMPLATE_ID,
+                          metrics: [...QUERY_METRICS]
+                        }));
+                      }
+                    }}
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium underline"
+                  >
+                    {useCustomTemplate ? '← Use default template' : 'Use my own template →'}
+                  </button>
+                </div>
+
+                {useCustomTemplate && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Template ID or URL
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={formState.templateId}
+                          onChange={e => updateForm('templateId', e.target.value)}
+                          placeholder="Paste Google Slides URL or template ID"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleValidateTemplate}
+                          disabled={isValidatingTemplate || !formState.templateId.trim()}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors"
+                        >
+                          {isValidatingTemplate ? 'Validating...' : 'Test Template'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Make sure the template is shared with "Anyone with the link"
+                      </p>
+                    </div>
+
+                    <TemplatePreview templateInfo={templateInfo} isValidating={isValidatingTemplate} />
+
+                    {/* Template Instructions */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setShowInstructions(!showInstructions)}
+                        className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-sm font-medium text-gray-700"
+                      >
+                        <span>How to create a custom template</span>
+                        {showInstructions ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                      {showInstructions && (
+                        <div className="p-4 bg-white border-t border-gray-200 text-sm text-gray-700 space-y-3">
+                          <div>
+                            <p className="font-semibold mb-2">Creating Your Template:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-xs">
+                              <li>Create a new Google Slides presentation</li>
+                              <li>Design your slides with your branding and layout</li>
+                              <li>Add placeholder variables where you want data inserted</li>
+                              <li>Share the presentation with "Anyone with the link" (View access)</li>
+                              <li>Copy the template URL or ID and paste it above</li>
+                            </ol>
+                          </div>
+
+                          <div>
+                            <p className="font-semibold mb-2">Available Placeholder Variables:</p>
+                            <div className="bg-gray-50 rounded p-3 space-y-1.5 text-xs font-mono">
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                <div><code className="text-orange-600">{'{{brand_name}}'}</code> - Brand identifier</div>
+                                <div><code className="text-orange-600">{'{{brand_id}}'}</code> - Brand ID</div>
+                                <div><code className="text-orange-600">{'{{date_range}}'}</code> - Full date range</div>
+                                <div><code className="text-orange-600">{'{{start_date}}'}</code> - Start date</div>
+                                <div><code className="text-orange-600">{'{{end_date}}'}</code> - End date</div>
+                                <div><code className="text-orange-600">{'{{total_responses}}'}</code> - Response count</div>
+                                <div><code className="text-orange-600">{'{{presence_pct}}'}</code> - Brand presence %</div>
+                                <div><code className="text-orange-600">{'{{position_score}}'}</code> - Position score</div>
+                                <div><code className="text-orange-600">{'{{sentiment_score}}'}</code> - Sentiment score</div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              💡 Tip: Type these exactly as shown (including double curly braces) anywhere in your slides
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="font-semibold mb-2">Example Usage:</p>
+                            <div className="bg-gray-50 rounded p-3 text-xs">
+                              <p className="mb-1">In your slide, you might write:</p>
+                              <p className="font-mono text-gray-600 ml-2">
+                                "During {'{{date_range}}'}, <span className="text-orange-600">{'{{brand_name}}'}</span> had a presence in <span className="text-orange-600">{'{{presence_pct}}'}</span> of responses."
+                              </p>
+                              <p className="mt-2 text-gray-500">This will become:</p>
+                              <p className="font-mono text-gray-600 ml-2">
+                                "During 2024-01-01 to 2024-01-31, <span className="text-green-600">Acme Corp</span> had a presence in <span className="text-green-600">45.2%</span> of responses."
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+
+            {/* Metrics Selection - Only show for custom templates */}
+            {useCustomTemplate && (
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                  Select Metrics to Include
+                </h2>
+                <MetricsSelector
+                  selectedMetrics={formState.metrics}
+                  onChange={metrics => updateForm('metrics', metrics)}
+                />
+              </section>
+            )}
+
+            {/* Generation */}
+            <section className="space-y-4">
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generationStep !== 'idle' && generationStep !== 'error' && generationStep !== 'done'}
+                className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base transition-colors"
+              >
+                Generate Slides
+              </button>
+
+              <ProgressTracker
+                step={generationStep}
+                error={error}
+                slideLink={slideLink}
+              />
+            </section>
+          </div>
+        </div>
+
+        {/* Help Text */}
+        <div className="mt-6 text-center text-sm text-gray-500">
+          <p>
+            Need help? Check out the{' '}
+            <a
+              href="https://docs.google.com/document/d/example"
+              className="text-orange-600 hover:text-orange-700 font-medium"
+            >
+              template creation guide
+            </a>
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;
