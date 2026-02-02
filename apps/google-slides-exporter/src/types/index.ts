@@ -6,6 +6,12 @@ export interface FormState {
   templateId: string;
   metrics: string[];
   slideName: string;
+  // Optional filters
+  tag?: string;
+  aiPlatform?: string;
+  branded?: string;
+  promptTopic?: string;
+  country?: string;
 }
 
 export interface QueryResult {

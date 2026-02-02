@@ -27,6 +27,11 @@ interface FetchParams {
   startDate: string;
   endDate: string;
   metrics: string[];
+  tag?: string;
+  aiPlatform?: string;
+  branded?: string;
+  promptTopic?: string;
+  country?: string;
 }
 
 type ApiResponse =
@@ -72,10 +77,18 @@ export function validateQueryFields(fields: string[]): { valid: boolean; error?:
 }
 
 export async function fetchBrandMetrics(params: FetchParams): Promise<QueryResult> {
-  const { apiKey, brandId, startDate, endDate, metrics } = params;
+  const { apiKey, brandId, startDate, endDate, metrics, tag, aiPlatform, branded, promptTopic, country } = params;
 
   // Use Supabase Edge Function proxy
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
+
+  // Build filters object, only including non-empty values
+  const filters: Record<string, string> = {};
+  if (tag) filters.tag = tag;
+  if (aiPlatform) filters.ai_platform = aiPlatform;
+  if (branded) filters.branded = branded;
+  if (promptTopic) filters.prompt_topic = promptTopic;
+  if (country) filters.country = country;
 
   const response = await fetch(proxyUrl, {
     method: 'POST',
@@ -89,6 +102,7 @@ export async function fetchBrandMetrics(params: FetchParams): Promise<QueryResul
       endDate,
       endpoint: 'query',
       fields: metrics,
+      filters: Object.keys(filters).length > 0 ? filters : undefined,
       fetchAll: false,
       limit: 1,
       offset: 0,
