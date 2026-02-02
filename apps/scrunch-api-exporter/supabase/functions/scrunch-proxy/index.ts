@@ -6,12 +6,12 @@ const corsHeaders = {
 
 interface RequestBody {
   apiKey: string;
-  brandId: string;
-  startDate: string;
-  endDate: string;
+  brandId?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
   offset?: number;
-  endpoint?: 'responses' | 'query';
+  endpoint?: 'responses' | 'query' | 'brands';
   fields?: string[];
 }
 
@@ -150,7 +150,18 @@ Deno.serve(async (req: Request) => {
   try {
     const { apiKey, brandId, startDate, endDate, endpoint = 'responses', fields = [], limit = 100, offset = 0 }: RequestBody = await req.json();
 
-    if (!apiKey || !brandId || !startDate || !endDate) {
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: "Missing required parameter: apiKey" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // For brands endpoint, we don't need brandId, startDate, endDate
+    if (endpoint !== 'brands' && (!brandId || !startDate || !endDate)) {
       return new Response(
         JSON.stringify({ error: "Missing required parameters" }),
         {
@@ -160,7 +171,40 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (endpoint === 'query') {
+    if (endpoint === 'brands') {
+      // Brands endpoint - list all brands
+      const url = new URL(`https://api.scrunchai.com/v1/brands`);
+      url.searchParams.append("limit", limit.toString());
+      url.searchParams.append("offset", offset.toString());
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(
+          JSON.stringify({
+            error: `Scrunch API error: ${response.status} ${response.statusText}`,
+            details: errorText,
+          }),
+          {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const data: ScrunchResponse = await response.json();
+
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } else if (endpoint === 'query') {
       if (fields.length === 0) {
         return new Response(
           JSON.stringify({ error: "Fields parameter is required for query endpoint" }),
