@@ -64,15 +64,13 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  console.log('Supabase key exists:', !!supabaseKey, 'Length:', supabaseKey?.length);
 
-  // The proxy requires brandId, startDate, endDate even though /brands endpoint doesn't use them
-  // Use placeholder values to satisfy proxy validation
   const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
     },
     body: JSON.stringify({
       apiKey,
@@ -150,10 +148,14 @@ export async function fetchBrandMetrics(params: FetchParams): Promise<QueryResul
     }
   }
 
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
   const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
     },
     body: JSON.stringify({
       apiKey,
