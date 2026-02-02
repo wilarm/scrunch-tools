@@ -247,13 +247,24 @@ function App() {
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Scrunch API Key
                   </label>
-                  <input
-                    type="password"
-                    value={formState.apiKey}
-                    onChange={e => handleApiKeyChange(e.target.value)}
-                    placeholder="Enter your Scrunch API key"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={formState.apiKey}
+                      onChange={e => handleApiKeyChange(e.target.value)}
+                      placeholder="Enter your Scrunch API key"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApiKeyChange(formState.apiKey)}
+                      disabled={isFetchingBrands || formState.apiKey.length < 20}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors whitespace-nowrap"
+                      title="Refresh brands"
+                    >
+                      {isFetchingBrands ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
                   {isFetchingBrands && (
                     <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                       <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>

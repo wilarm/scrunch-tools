@@ -60,26 +60,22 @@ function extractRows(json: ApiResponse): Record<string, unknown>[] {
 }
 
 export async function fetchBrands(apiKey: string): Promise<Brand[]> {
-  // Use Supabase Edge Function proxy
-  const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
+  // Call the Scrunch API directly instead of using the proxy
+  // The /brands endpoint is simpler and doesn't need the proxy complexity
+  const apiUrl = 'https://api.scrunchai.com/v1/brands?limit=100';
 
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
+  const response = await fetch(apiUrl, {
+    method: 'GET',
     headers: {
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      apiKey,
-      endpoint: 'brands',
-      fetchAll: false,
-      limit: 100,
-      offset: 0,
-    }),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    const errorText = await response.text();
+    console.error('Failed to fetch brands:', errorText);
+    throw new Error(`Failed to fetch brands: ${response.status} ${response.statusText}`);
   }
 
   const json = await response.json();
