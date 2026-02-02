@@ -71,11 +71,9 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
     body: JSON.stringify({
       apiKey,
       endpoint: 'brands',
-      method: 'GET',
-      queryParams: {
-        limit: 100,
-        offset: 0,
-      },
+      fetchAll: false,
+      limit: 100,
+      offset: 0,
     }),
   });
 
