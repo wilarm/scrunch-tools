@@ -69,14 +69,11 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({
       apiKey,
-      brandId: '0', // Placeholder - not used by /brands endpoint
-      startDate: '2024-01-01', // Placeholder - not used by /brands endpoint
-      endDate: '2024-01-01', // Placeholder - not used by /brands endpoint
       endpoint: 'brands',
-      fetchAll: false,
       limit: 100,
       offset: 0,
     }),
