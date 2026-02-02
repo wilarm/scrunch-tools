@@ -11,7 +11,6 @@ export interface FormState {
   aiPlatform?: string;
   branded?: string;
   promptTopic?: string;
-  country?: string;
 }
 
 export interface QueryResult {

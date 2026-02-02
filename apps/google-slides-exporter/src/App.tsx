@@ -29,7 +29,6 @@ function App() {
     aiPlatform: '',
     branded: '',
     promptTopic: '',
-    country: '',
   });
 
   const [useCustomTemplate, setUseCustomTemplate] = useState(false);
@@ -124,7 +123,6 @@ function App() {
         aiPlatform: formState.aiPlatform,
         branded: formState.branded,
         promptTopic: formState.promptTopic,
-        country: formState.country,
       });
 
       // Step 3: Generate slides
@@ -268,10 +266,17 @@ function App() {
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                        Tags
-                        <span className="text-xs text-gray-500" title="Comma-separated list of prompt tags. Example: product-research,competitor-analysis">ⓘ</span>
-                      </label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Tags
+                        </label>
+                        <div className="group relative">
+                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                            Comma-separated list of prompt tags. Example: product-research, competitor-analysis
+                          </div>
+                        </div>
+                      </div>
                       <input
                         type="text"
                         value={formState.tag || ''}
@@ -282,67 +287,79 @@ function App() {
                       <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                        AI Platform
-                        <span className="text-xs text-gray-500" title="Filter by AI platform name (e.g., ChatGPT, Claude, Gemini, Perplexity)">ⓘ</span>
-                      </label>
-                      <input
-                        type="text"
+                      <div className="flex items-center gap-1 mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          AI Platform
+                        </label>
+                        <div className="group relative">
+                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                            Filter by specific AI platform
+                          </div>
+                        </div>
+                      </div>
+                      <select
                         value={formState.aiPlatform || ''}
                         onChange={e => updateForm('aiPlatform', e.target.value)}
-                        placeholder="e.g., ChatGPT"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Platform name (mapped display name)</p>
+                      >
+                        <option value="">Any Platform</option>
+                        <option value="chatgpt">ChatGPT</option>
+                        <option value="claude">Claude</option>
+                        <option value="google_gemini">Google Gemini</option>
+                        <option value="perplexity">Perplexity</option>
+                        <option value="copilot">Copilot</option>
+                        <option value="google_ai_overviews">Google AI Overviews</option>
+                        <option value="google_ai_mode">Google AI Mode</option>
+                        <option value="meta">Meta AI</option>
+                      </select>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                        Branded
-                        <span className="text-xs text-gray-500" title="Filter by whether the prompt explicitly mentions your brand">ⓘ</span>
-                      </label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Branded
+                        </label>
+                        <div className="group relative">
+                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                            Filter by whether the prompt explicitly mentions your brand
+                          </div>
+                        </div>
+                      </div>
                       <select
                         value={formState.branded || ''}
                         onChange={e => updateForm('branded', e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                       >
                         <option value="">Any</option>
-                        <option value="true">True</option>
-                        <option value="false">False</option>
+                        <option value="true">Branded</option>
+                        <option value="false">Non-Branded</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">Prompt contains brand name</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                        Country
-                        <span className="text-xs text-gray-500" title="Filter by country code (e.g., US, UK, CA, AU)">ⓘ</span>
-                      </label>
+                      <div className="flex items-center gap-1 mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Prompt Topics
+                        </label>
+                        <div className="group relative">
+                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                            Comma-separated list of topic names. Topics categorize prompts by subject area.
+                          </div>
+                        </div>
+                      </div>
                       <input
                         type="text"
-                        value={formState.country || ''}
-                        onChange={e => updateForm('country', e.target.value)}
-                        placeholder="e.g., US"
+                        value={formState.promptTopic || ''}
+                        onChange={e => updateForm('promptTopic', e.target.value)}
+                        placeholder="e.g., pricing, features, reviews"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Two-letter country code</p>
+                      <p className="text-xs text-gray-500 mt-1">Separate multiple topics with commas</p>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                      Prompt Topics
-                      <span className="text-xs text-gray-500" title="Comma-separated list of topic names. Topics categorize prompts by subject area.">ⓘ</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.promptTopic || ''}
-                      onChange={e => updateForm('promptTopic', e.target.value)}
-                      placeholder="e.g., pricing, features, reviews"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Separate multiple topics with commas</p>
                   </div>
                 </div>
               )}
