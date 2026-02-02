@@ -33,6 +33,7 @@ function App() {
 
   const [useCustomTemplate, setUseCustomTemplate] = useState(false);
   const [showAdditionalFilters, setShowAdditionalFilters] = useState(false);
+  const [showTemplateInstructions, setShowTemplateInstructions] = useState(false);
   const [templateInfo, setTemplateInfo] = useState<TemplateInfo | null>(null);
   const [isValidatingTemplate, setIsValidatingTemplate] = useState(false);
   const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
@@ -457,17 +458,17 @@ function App() {
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
                       <button
                         type="button"
-                        onClick={() => setShowInstructions(!showInstructions)}
+                        onClick={() => setShowTemplateInstructions(!showTemplateInstructions)}
                         className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-sm font-medium text-gray-700"
                       >
                         <span>How to create a custom template</span>
-                        {showInstructions ? (
+                        {showTemplateInstructions ? (
                           <ChevronUp className="w-4 h-4" />
                         ) : (
                           <ChevronDown className="w-4 h-4" />
                         )}
                       </button>
-                      {showInstructions && (
+                      {showTemplateInstructions && (
                         <div className="p-4 bg-white border-t border-gray-200 text-sm text-gray-700 space-y-3">
                           <div>
                             <p className="font-semibold mb-2">Creating Your Template:</p>
