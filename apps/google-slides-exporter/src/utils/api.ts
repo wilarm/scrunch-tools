@@ -64,6 +64,12 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  console.log('Supabase key check:', {
+    exists: !!supabaseKey,
+    length: supabaseKey?.length,
+    firstChars: supabaseKey?.substring(0, 20),
+    lastChars: supabaseKey?.substring(supabaseKey.length - 10)
+  });
 
   const response = await fetch(proxyUrl, {
     method: 'POST',
