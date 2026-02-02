@@ -33,7 +33,7 @@ function App() {
   });
 
   const [useCustomTemplate, setUseCustomTemplate] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [showAdditionalFilters, setShowAdditionalFilters] = useState(false);
   const [templateInfo, setTemplateInfo] = useState<TemplateInfo | null>(null);
   const [isValidatingTemplate, setIsValidatingTemplate] = useState(false);
   const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
@@ -253,102 +253,99 @@ function App() {
 
             {/* Additional Filters */}
             <section className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
+              <button
+                type="button"
+                onClick={() => setShowAdditionalFilters(!showAdditionalFilters)}
+                className="w-full flex items-center justify-between border-b pb-2 hover:text-orange-600 transition-colors"
+              >
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Additional Filters
+                  Additional Filters <span className="text-sm font-normal text-gray-500">(Optional)</span>
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowInstructions(!showInstructions)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  {showInstructions ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </button>
-              </div>
+                {showAdditionalFilters ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
 
-              {showInstructions && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
-                  <p className="mb-2">Optional filters to narrow down your query results:</p>
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    <li><strong>Tag:</strong> Filter by custom tag</li>
-                    <li><strong>AI Platform:</strong> Filter by specific AI platform (e.g., ChatGPT, Claude)</li>
-                    <li><strong>Branded:</strong> Filter by branded status (true/false)</li>
-                    <li><strong>Prompt Topic:</strong> Filter by prompt topic category</li>
-                    <li><strong>Country:</strong> Filter by country code (e.g., US, UK)</li>
-                  </ul>
+              {showAdditionalFilters && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                        Tags
+                        <span className="text-xs text-gray-500" title="Comma-separated list of prompt tags. Example: product-research,competitor-analysis">ⓘ</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.tag || ''}
+                        onChange={e => updateForm('tag', e.target.value)}
+                        placeholder="e.g., product-research, pricing"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                        AI Platform
+                        <span className="text-xs text-gray-500" title="Filter by AI platform name (e.g., ChatGPT, Claude, Gemini, Perplexity)">ⓘ</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.aiPlatform || ''}
+                        onChange={e => updateForm('aiPlatform', e.target.value)}
+                        placeholder="e.g., ChatGPT"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Platform name (mapped display name)</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                        Branded
+                        <span className="text-xs text-gray-500" title="Filter by whether the prompt explicitly mentions your brand">ⓘ</span>
+                      </label>
+                      <select
+                        value={formState.branded || ''}
+                        onChange={e => updateForm('branded', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      >
+                        <option value="">Any</option>
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">Prompt contains brand name</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                        Country
+                        <span className="text-xs text-gray-500" title="Filter by country code (e.g., US, UK, CA, AU)">ⓘ</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formState.country || ''}
+                        onChange={e => updateForm('country', e.target.value)}
+                        placeholder="e.g., US"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Two-letter country code</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                      Prompt Topics
+                      <span className="text-xs text-gray-500" title="Comma-separated list of topic names. Topics categorize prompts by subject area.">ⓘ</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formState.promptTopic || ''}
+                      onChange={e => updateForm('promptTopic', e.target.value)}
+                      placeholder="e.g., pricing, features, reviews"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate multiple topics with commas</p>
+                  </div>
                 </div>
               )}
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tag
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.tag || ''}
-                      onChange={e => updateForm('tag', e.target.value)}
-                      placeholder="Optional"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      AI Platform
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.aiPlatform || ''}
-                      onChange={e => updateForm('aiPlatform', e.target.value)}
-                      placeholder="Optional"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Branded
-                    </label>
-                    <select
-                      value={formState.branded || ''}
-                      onChange={e => updateForm('branded', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="">Any</option>
-                      <option value="true">True</option>
-                      <option value="false">False</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.country || ''}
-                      onChange={e => updateForm('country', e.target.value)}
-                      placeholder="Optional (e.g., US)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prompt Topic
-                  </label>
-                  <input
-                    type="text"
-                    value={formState.promptTopic || ''}
-                    onChange={e => updateForm('promptTopic', e.target.value)}
-                    placeholder="Optional"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
             </section>
 
             {/* Template Configuration */}

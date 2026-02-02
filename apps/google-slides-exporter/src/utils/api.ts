@@ -83,11 +83,31 @@ export async function fetchBrandMetrics(params: FetchParams): Promise<QueryResul
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
   // Build filters object, only including non-empty values
-  const filters: Record<string, string> = {};
-  if (tag) filters.tag = tag;
+  const filters: Record<string, string | string[]> = {};
+
+  // Handle comma-separated tags
+  if (tag && tag.trim()) {
+    const tags = tag.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    if (tags.length === 1) {
+      filters.tag = tags[0];
+    } else if (tags.length > 1) {
+      filters.tag = tags;
+    }
+  }
+
   if (aiPlatform) filters.ai_platform = aiPlatform;
   if (branded) filters.branded = branded;
-  if (promptTopic) filters.prompt_topic = promptTopic;
+
+  // Handle comma-separated prompt topics
+  if (promptTopic && promptTopic.trim()) {
+    const topics = promptTopic.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    if (topics.length === 1) {
+      filters.prompt_topic = topics[0];
+    } else if (topics.length > 1) {
+      filters.prompt_topic = topics;
+    }
+  }
+
   if (country) filters.country = country;
 
   const response = await fetch(proxyUrl, {
