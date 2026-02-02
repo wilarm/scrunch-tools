@@ -1,4 +1,4 @@
-import type { QueryResult, Brand } from '../types';
+import type { QueryResult, Brand, DonutChartConfig } from '../types';
 
 export const QUERY_METRICS = [
   'responses',
@@ -63,13 +63,16 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
   // Use Supabase Edge Function proxy to avoid CORS issues
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  console.log('Supabase key exists:', !!supabaseKey, 'Length:', supabaseKey?.length);
+
   // The proxy requires brandId, startDate, endDate even though /brands endpoint doesn't use them
   // Use placeholder values to satisfy proxy validation
   const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${supabaseKey}`,
     },
     body: JSON.stringify({
       apiKey,
@@ -219,4 +222,50 @@ function formatNumber(val?: number): string {
 function formatScore(val?: number): string {
   if (val == null) return 'N/A';
   return val.toFixed(2);
+}
+
+// Build chart configurations from query data
+export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
+  const charts: DonutChartConfig[] = [];
+
+  // Sentiment Chart
+  if (data.brand_sentiment_score != null) {
+    const sentimentPct = data.brand_sentiment_score * 100;
+    charts.push({
+      title: 'Sentiment',
+      sheetName: 'Sentiment',
+      data: [
+        { label: 'Positive', value: sentimentPct },
+        { label: 'Other', value: 100 - sentimentPct },
+      ],
+    });
+  }
+
+  // Brand Presence Chart
+  if (data.brand_presence_percentage != null) {
+    const presencePct = data.brand_presence_percentage * 100;
+    charts.push({
+      title: 'Brand Presence',
+      sheetName: 'BrandPresence',
+      data: [
+        { label: 'Present', value: presencePct },
+        { label: 'Not Present', value: 100 - presencePct },
+      ],
+    });
+  }
+
+  // Position Chart
+  if (data.brand_position_score != null) {
+    const positionPct = data.brand_position_score * 100;
+    charts.push({
+      title: 'Position',
+      sheetName: 'Position',
+      data: [
+        { label: 'Top Position', value: positionPct },
+        { label: 'Other', value: 100 - positionPct },
+      ],
+    });
+  }
+
+  return charts;
 }
