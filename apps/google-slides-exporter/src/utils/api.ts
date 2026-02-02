@@ -63,6 +63,8 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
   // Use Supabase Edge Function proxy to avoid CORS issues
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
+  // The proxy requires brandId, startDate, endDate even though /brands endpoint doesn't use them
+  // Use placeholder values to satisfy proxy validation
   const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
@@ -70,6 +72,9 @@ export async function fetchBrands(apiKey: string): Promise<Brand[]> {
     },
     body: JSON.stringify({
       apiKey,
+      brandId: '0', // Placeholder - not used by /brands endpoint
+      startDate: '2024-01-01', // Placeholder - not used by /brands endpoint
+      endDate: '2024-01-01', // Placeholder - not used by /brands endpoint
       endpoint: 'brands',
       fetchAll: false,
       limit: 100,
