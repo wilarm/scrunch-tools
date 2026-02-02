@@ -60,16 +60,23 @@ function extractRows(json: ApiResponse): Record<string, unknown>[] {
 }
 
 export async function fetchBrands(apiKey: string): Promise<Brand[]> {
-  // Call the Scrunch API directly instead of using the proxy
-  // The /brands endpoint is simpler and doesn't need the proxy complexity
-  const apiUrl = 'https://api.scrunchai.com/v1/brands?limit=100';
+  // Use Supabase Edge Function proxy to avoid CORS issues
+  const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
-  const response = await fetch(apiUrl, {
-    method: 'GET',
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      apiKey,
+      endpoint: 'brands',
+      method: 'GET',
+      queryParams: {
+        limit: 100,
+        offset: 0,
+      },
+    }),
   });
 
   if (!response.ok) {
