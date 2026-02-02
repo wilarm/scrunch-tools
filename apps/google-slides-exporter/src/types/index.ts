@@ -1,6 +1,7 @@
 export interface FormState {
   apiKey: string;
   brandId: string;
+  brandName: string;
   startDate: string;
   endDate: string;
   templateId: string;
@@ -11,6 +12,12 @@ export interface FormState {
   aiPlatform?: string;
   branded?: string;
   promptTopic?: string;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  website: string;
 }
 
 export interface QueryResult {

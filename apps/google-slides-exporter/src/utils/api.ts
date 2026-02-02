@@ -1,4 +1,4 @@
-import type { QueryResult } from '../types';
+import type { QueryResult, Brand } from '../types';
 
 export const QUERY_METRICS = [
   'responses',
@@ -54,6 +54,43 @@ function extractRows(json: ApiResponse): Record<string, unknown>[] {
 
   if ('results' in json && Array.isArray(json.results)) {
     return json.results;
+  }
+
+  return [];
+}
+
+export async function fetchBrands(apiKey: string): Promise<Brand[]> {
+  // Use Supabase Edge Function proxy
+  const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
+
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      apiKey,
+      endpoint: 'brands',
+      fetchAll: false,
+      limit: 100,
+      offset: 0,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+  }
+
+  const json = await response.json();
+
+  // Handle the response format from the API
+  if (json.items && Array.isArray(json.items)) {
+    return json.items as Brand[];
+  }
+
+  if (Array.isArray(json)) {
+    return json as Brand[];
   }
 
   return [];
@@ -145,12 +182,13 @@ export function buildReplacements(
   data: QueryResult,
   params: {
     brandId: string;
+    brandName: string;
     startDate: string;
     endDate: string;
   }
 ): Record<string, string> {
   return {
-    '{{brand_name}}': params.brandId,
+    '{{brand_name}}': params.brandName,
     '{{brand_id}}': params.brandId,
     '{{date_range}}': `${params.startDate} to ${params.endDate}`,
     '{{start_date}}': params.startDate,

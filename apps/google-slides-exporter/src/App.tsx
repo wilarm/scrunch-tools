@@ -3,11 +3,11 @@ import { FileText, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import MetricsSelector from './components/MetricsSelector';
 import TemplatePreview from './components/TemplatePreview';
 import ProgressTracker from './components/ProgressTracker';
-import { fetchBrandMetrics, validateQueryFields, buildReplacements, QUERY_METRICS } from './utils/api';
+import { fetchBrandMetrics, fetchBrands, validateQueryFields, buildReplacements, QUERY_METRICS } from './utils/api';
 import { initiateGoogleAuth, isOAuthCallback, handleOAuthCallback } from './utils/oauth';
 import { validateTemplate, generateSlides, extractTemplateId } from './utils/slides';
 import { DEFAULT_TEMPLATE_ID } from './utils/constants';
-import type { FormState, TemplateInfo, GenerationStep } from './types';
+import type { FormState, TemplateInfo, GenerationStep, Brand } from './types';
 
 function App() {
   // Handle OAuth callback
@@ -20,6 +20,7 @@ function App() {
   const [formState, setFormState] = useState<FormState>({
     apiKey: '',
     brandId: '',
+    brandName: '',
     startDate: '',
     endDate: '',
     templateId: DEFAULT_TEMPLATE_ID,
@@ -39,9 +40,53 @@ function App() {
   const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
   const [error, setError] = useState<string>('');
   const [slideLink, setSlideLink] = useState<string>('');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isFetchingBrands, setIsFetchingBrands] = useState(false);
 
   const updateForm = (field: keyof FormState, value: string | string[]) => {
     setFormState(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Fetch brands when API key is entered (minimum length check)
+  const handleApiKeyChange = async (apiKey: string) => {
+    updateForm('apiKey', apiKey);
+
+    // Check if API key looks valid (at least 20 characters as a simple check)
+    if (apiKey.length >= 20) {
+      setIsFetchingBrands(true);
+      setError('');
+      try {
+        const fetchedBrands = await fetchBrands(apiKey);
+        setBrands(fetchedBrands);
+
+        // Auto-select first brand if only one exists
+        if (fetchedBrands.length === 1) {
+          setFormState(prev => ({
+            ...prev,
+            brandId: fetchedBrands[0].id.toString(),
+            brandName: fetchedBrands[0].name,
+          }));
+        }
+      } catch (err) {
+        setBrands([]);
+        setError(err instanceof Error ? err.message : 'Failed to fetch brands');
+      } finally {
+        setIsFetchingBrands(false);
+      }
+    } else {
+      setBrands([]);
+      setFormState(prev => ({ ...prev, brandId: '', brandName: '' }));
+    }
+  };
+
+  // Handle brand selection
+  const handleBrandChange = (brandId: string) => {
+    const selectedBrand = brands.find(b => b.id.toString() === brandId);
+    setFormState(prev => ({
+      ...prev,
+      brandId,
+      brandName: selectedBrand?.name || '',
+    }));
   };
 
   const handleValidateTemplate = async () => {
@@ -130,6 +175,7 @@ function App() {
       setGenerationStep('creating');
       const replacements = buildReplacements(data, {
         brandId: formState.brandId,
+        brandName: formState.brandName,
         startDate: formState.startDate,
         endDate: formState.endDate,
       });
@@ -204,23 +250,45 @@ function App() {
                   <input
                     type="password"
                     value={formState.apiKey}
-                    onChange={e => updateForm('apiKey', e.target.value)}
+                    onChange={e => handleApiKeyChange(e.target.value)}
                     placeholder="Enter your Scrunch API key"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
+                  {isFetchingBrands && (
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                      Loading brands...
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Brand ID
+                    Brand
                   </label>
-                  <input
-                    type="text"
-                    value={formState.brandId}
-                    onChange={e => updateForm('brandId', e.target.value)}
-                    placeholder="e.g., my-brand-123"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
+                  {brands.length > 0 ? (
+                    <select
+                      value={formState.brandId}
+                      onChange={e => handleBrandChange(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="">Select a brand</option>
+                      {brands.map(brand => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formState.brandId}
+                      onChange={e => updateForm('brandId', e.target.value)}
+                      placeholder="Enter API key to load brands"
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
