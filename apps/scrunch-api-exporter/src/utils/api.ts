@@ -88,7 +88,9 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
 
   const allItems: Record<string, unknown>[] = [];
   let offset = 0;
-  let pageSize = DEFAULT_LIMIT;
+  // Use smaller page size per request to avoid edge function timeouts
+  // The edge function now handles single pages, frontend handles pagination
+  const pageSize = endpoint === 'responses' ? 100 : 1000;
 
   try {
     onProgress?.(0, MAX_ROWS);

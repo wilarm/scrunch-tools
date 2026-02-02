@@ -11,7 +11,6 @@ interface RequestBody {
   endDate: string;
   limit?: number;
   offset?: number;
-  fetchAll?: boolean;
   endpoint?: 'responses' | 'query';
   fields?: string[];
 }
@@ -149,7 +148,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { apiKey, brandId, startDate, endDate, fetchAll = false, endpoint = 'responses', fields = [] }: RequestBody = await req.json();
+    const { apiKey, brandId, startDate, endDate, endpoint = 'responses', fields = [], limit = 100, offset = 0 }: RequestBody = await req.json();
 
     if (!apiKey || !brandId || !startDate || !endDate) {
       return new Response(
@@ -172,148 +171,104 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const allItems: Record<string, unknown>[] = [];
-      let currentOffset = 0;
-      const pageLimit = 50000;
-      const maxResults = fetchAll ? Infinity : 50000;
+      const url = new URL(`https://api.scrunchai.com/v1/${brandId}/query`);
+      url.searchParams.append("start_date", startDate);
+      url.searchParams.append("end_date", endDate);
+      url.searchParams.append("fields", fields.join(","));
+      url.searchParams.append("limit", limit.toString());
+      url.searchParams.append("offset", offset.toString());
 
-      while (allItems.length < maxResults) {
-        const url = new URL(`https://api.scrunchai.com/v1/${brandId}/query`);
-        url.searchParams.append("start_date", startDate);
-        url.searchParams.append("end_date", endDate);
-        url.searchParams.append("fields", fields.join(","));
-        url.searchParams.append("limit", pageLimit.toString());
-        url.searchParams.append("offset", currentOffset.toString());
+      const response = await fetch(url.toString(), {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json",
+        },
+      });
 
-        const response = await fetch(url.toString(), {
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Accept": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return new Response(
-            JSON.stringify({
-              error: `Scrunch API error: ${response.status} ${response.statusText}`,
-              details: errorText,
-            }),
-            {
-              status: response.status,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        const data: ScrunchResponse = await response.json();
-
-        if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
-          return new Response(
-            JSON.stringify({
-              error: `Scrunch API error: ${data.error}`,
-            }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        const items = extractItems(data);
-
-        if (items.length === 0) {
-          console.warn(`Query endpoint returned 0 rows. URL: ${url.toString()}\nUpstream response shape:`, data);
-          break;
-        }
-
-        for (const item of items) {
-          if (allItems.length >= maxResults) break;
-          allItems.push(item);
-        }
-
-        if (items.length < pageLimit) {
-          break;
-        }
-
-        currentOffset += pageLimit;
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(
+          JSON.stringify({
+            error: `Scrunch API error: ${response.status} ${response.statusText}`,
+            details: errorText,
+          }),
+          {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       }
 
-      return new Response(JSON.stringify({ items: allItems, total: allItems.length }), {
+      const data: ScrunchResponse = await response.json();
+
+      if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
+        return new Response(
+          JSON.stringify({
+            error: `Scrunch API error: ${data.error}`,
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const items = extractItems(data);
+
+      return new Response(JSON.stringify({ items, total: items.length }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      const allItems: Record<string, unknown>[] = [];
-      let currentOffset = 0;
-      const pageLimit = 100;
-      const maxResponses = fetchAll ? Infinity : 1000;
-
-      while (allItems.length < maxResponses) {
-        const url = new URL(`https://api.scrunchai.com/v1/${brandId}/responses`);
-        url.searchParams.append("start_date", startDate);
-        url.searchParams.append("end_date", endDate);
-        url.searchParams.append("limit", pageLimit.toString());
-        url.searchParams.append("offset", currentOffset.toString());
-        if (fields && fields.length > 0) {
-          url.searchParams.append("fields", fields.join(","));
-        }
-
-        const response = await fetch(url.toString(), {
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Accept": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          return new Response(
-            JSON.stringify({
-              error: `Scrunch API error: ${response.status} ${response.statusText}`,
-              details: errorText,
-            }),
-            {
-              status: response.status,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        const data: ScrunchResponse = await response.json();
-
-        if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
-          return new Response(
-            JSON.stringify({
-              error: `Scrunch API error: ${data.error}`,
-            }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        const items = extractItems(data);
-
-        if (items.length === 0) {
-          console.warn(`Responses endpoint returned 0 rows. URL: ${url.toString()}\nUpstream response shape:`, data);
-          break;
-        }
-
-        for (const item of items) {
-          if (allItems.length >= maxResponses) break;
-          allItems.push(flattenResponse(item as Response));
-        }
-
-        if (items.length < pageLimit) {
-          break;
-        }
-
-        currentOffset += pageLimit;
+      // Responses endpoint - fetch single page and flatten
+      const url = new URL(`https://api.scrunchai.com/v1/${brandId}/responses`);
+      url.searchParams.append("start_date", startDate);
+      url.searchParams.append("end_date", endDate);
+      url.searchParams.append("limit", limit.toString());
+      url.searchParams.append("offset", offset.toString());
+      if (fields && fields.length > 0) {
+        url.searchParams.append("fields", fields.join(","));
       }
 
-      return new Response(JSON.stringify({ items: allItems, total: allItems.length }), {
+      const response = await fetch(url.toString(), {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(
+          JSON.stringify({
+            error: `Scrunch API error: ${response.status} ${response.statusText}`,
+            details: errorText,
+          }),
+          {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const data: ScrunchResponse = await response.json();
+
+      if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
+        return new Response(
+          JSON.stringify({
+            error: `Scrunch API error: ${data.error}`,
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      const items = extractItems(data);
+      const flattenedItems = items.map(item => flattenResponse(item as Response));
+
+      return new Response(JSON.stringify({ items: flattenedItems, total: flattenedItems.length }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
