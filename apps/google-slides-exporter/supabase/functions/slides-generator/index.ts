@@ -1,14 +1,35 @@
+import {
+  createSheet,
+  createAndLinkDonutChart,
+  inchesToEmu,
+  type DonutChartConfig,
+} from './sheets.ts';
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+interface ChartConfig {
+  title: string;
+  data: Array<{ label: string; value: number }>;
+  sheetName: string;
+  slideObjectId?: string;
+  position?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
 interface GenerateRequest {
   accessToken: string;
   templateId: string;
   slideName: string;
   replacements: Record<string, string>;
+  charts?: ChartConfig[];
 }
 
 interface PreviewRequest {
@@ -28,8 +49,33 @@ interface SlideElement {
   };
 }
 
+interface PageElement {
+  objectId?: string;
+  size?: {
+    width?: { magnitude?: number };
+    height?: { magnitude?: number };
+  };
+  transform?: {
+    scaleX?: number;
+    scaleY?: number;
+    translateX?: number;
+    translateY?: number;
+    unit?: string;
+  };
+  shape?: {
+    text?: {
+      textElements?: Array<{
+        textRun?: {
+          content?: string;
+        };
+      }>;
+    };
+  };
+}
+
 interface Slide {
-  pageElements?: SlideElement[];
+  objectId?: string;
+  pageElements?: PageElement[];
 }
 
 interface PresentationResponse {
@@ -137,6 +183,55 @@ function extractPlaceholders(presentation: PresentationResponse): string[] {
   return Array.from(placeholders).sort();
 }
 
+// Helper function to convert EMU to inches
+function emuToInches(emu: number): number {
+  return emu / 914400;
+}
+
+// Find positions of chart placeholders in the presentation
+async function findChartPlaceholderPositions(
+  presentation: PresentationResponse,
+  chartPlaceholders: string[]
+): Promise<Map<string, { slideObjectId: string; x: number; y: number; width: number; height: number }>> {
+  const positions = new Map();
+
+  const slides = presentation.slides || [];
+  for (const slide of slides) {
+    const elements = slide.pageElements || [];
+
+    for (const element of elements) {
+      if (!element.shape?.text) continue;
+
+      // Get text content from this element
+      const textElements = element.shape.text.textElements || [];
+      const content = textElements
+        .map(te => te.textRun?.content || '')
+        .join('');
+
+      // Check if this element contains any chart placeholder
+      for (const placeholder of chartPlaceholders) {
+        if (content.includes(placeholder)) {
+          // Extract position and size from the element
+          const transform = element.transform || {};
+          const size = element.size || {};
+
+          positions.set(placeholder, {
+            slideObjectId: slide.objectId!,
+            x: emuToInches(transform.translateX || 0),
+            y: emuToInches(transform.translateY || 0),
+            width: emuToInches(size.width?.magnitude || inchesToEmu(3)),
+            height: emuToInches(size.height?.magnitude || inchesToEmu(3)),
+          });
+
+          console.log(`Found chart placeholder ${placeholder} at position:`, positions.get(placeholder));
+        }
+      }
+    }
+  }
+
+  return positions;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -181,7 +276,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Main generation endpoint
-    const { accessToken, templateId, slideName, replacements }: GenerateRequest = await req.json();
+    const { accessToken, templateId, slideName, replacements, charts }: GenerateRequest = await req.json();
 
     if (!accessToken || !templateId || !slideName || !replacements) {
       return new Response(
@@ -197,14 +292,107 @@ Deno.serve(async (req: Request) => {
     const newDeck = await copyTemplate(accessToken, templateId, slideName);
     const deckId = newDeck.id;
 
-    // Step 2: Replace placeholders
+    // Step 2: Find chart placeholder positions BEFORE replacing text
+    let chartPlaceholderPositions = new Map();
+    let spreadsheetId: string | undefined;
+    let spreadsheetUrl: string | undefined;
+
+    if (charts && charts.length > 0) {
+      // Get the presentation to find chart placeholders
+      const presentation = await getPresentation(accessToken, deckId);
+
+      // Build list of chart placeholder names
+      const chartPlaceholders = charts.map(c => `{{${c.title.toLowerCase().replace(/\s+/g, '_')}_chart}}`);
+
+      // Find positions of chart placeholders in the template
+      chartPlaceholderPositions = await findChartPlaceholderPositions(presentation, chartPlaceholders);
+
+      // Add chart placeholders to replacements (will be replaced with empty string)
+      for (const placeholder of chartPlaceholders) {
+        replacements[placeholder] = '';
+      }
+    }
+
+    // Step 3: Replace placeholders (including removing chart placeholders)
     await replaceTextInSlides(accessToken, deckId, replacements);
 
-    // Step 3: Return result
+    // Step 4: Create charts if requested
+    if (charts && charts.length > 0) {
+      // Create a Google Sheet for the chart data
+      const sheetName = `${slideName} - Data`;
+      const sheet = await createSheet(accessToken, sheetName);
+      spreadsheetId = sheet.id;
+      spreadsheetUrl = sheet.spreadsheetUrl;
+
+      // Get the presentation again to find slide IDs (after text replacement)
+      const presentation = await getPresentation(accessToken, deckId);
+      const slides = presentation.slides || [];
+
+      // Create each chart
+      for (const chartConfig of charts) {
+        // Build the expected placeholder name
+        const placeholderName = `{{${chartConfig.title.toLowerCase().replace(/\s+/g, '_')}_chart}}`;
+
+        // Check if we found a position for this chart's placeholder
+        const placeholderPosition = chartPlaceholderPositions.get(placeholderName);
+
+        let slideObjectId: string;
+        let position: { x: number; y: number; width: number; height: number };
+
+        if (placeholderPosition) {
+          // Use the position from the placeholder
+          slideObjectId = placeholderPosition.slideObjectId;
+          position = {
+            x: placeholderPosition.x,
+            y: placeholderPosition.y,
+            width: placeholderPosition.width,
+            height: placeholderPosition.height,
+          };
+          console.log(`Using placeholder position for ${chartConfig.title}:`, position);
+        } else {
+          // Fall back to config-specified position or default
+          slideObjectId = chartConfig.slideObjectId || slides[0]?.objectId || '';
+          position = chartConfig.position || {
+            x: 3.5,
+            y: 2,
+            width: 3,
+            height: 3,
+          };
+          console.log(`Using fallback position for ${chartConfig.title}:`, position);
+        }
+
+        if (!slideObjectId) {
+          console.warn('No slide found to place chart on');
+          continue;
+        }
+
+        await createAndLinkDonutChart(
+          accessToken,
+          spreadsheetId,
+          deckId,
+          {
+            title: chartConfig.title,
+            data: chartConfig.data,
+            sheetName: chartConfig.sheetName,
+          },
+          {
+            slideObjectId,
+            x: inchesToEmu(position.x),
+            y: inchesToEmu(position.y),
+            width: inchesToEmu(position.width),
+            height: inchesToEmu(position.height),
+          }
+        );
+      }
+    }
+
+    // Step 4: Return result
     return new Response(
       JSON.stringify({
         deckId,
         link: `https://docs.google.com/presentation/d/${deckId}/edit`,
+        spreadsheetId,
+        spreadsheetUrl,
       }),
       {
         status: 200,

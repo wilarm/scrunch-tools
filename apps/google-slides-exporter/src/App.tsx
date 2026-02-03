@@ -3,7 +3,7 @@ import { FileText, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import MetricsSelector from './components/MetricsSelector';
 import TemplatePreview from './components/TemplatePreview';
 import ProgressTracker from './components/ProgressTracker';
-import { fetchBrandMetrics, fetchBrands, validateQueryFields, buildReplacements, QUERY_METRICS } from './utils/api';
+import { fetchBrandMetrics, fetchBrands, validateQueryFields, buildReplacements, buildChartConfigs, QUERY_METRICS } from './utils/api';
 import { initiateGoogleAuth, isOAuthCallback, handleOAuthCallback } from './utils/oauth';
 import { validateTemplate, generateSlides, extractTemplateId } from './utils/slides';
 import { DEFAULT_TEMPLATE_ID } from './utils/constants';
@@ -180,17 +180,26 @@ function App() {
         endDate: formState.endDate,
       });
 
+      // Build chart configurations from the data
+      const charts = buildChartConfigs(data);
+
       const templateId = extractTemplateId(formState.templateId);
       const result = await generateSlides({
         accessToken,
         templateId,
         slideName: formState.slideName,
         replacements,
+        charts: charts.length > 0 ? charts : undefined,
       });
 
       // Step 4: Done
       setGenerationStep('done');
       setSlideLink(result.link);
+
+      // Log spreadsheet info if charts were created
+      if (result.spreadsheetId) {
+        console.log('Chart data spreadsheet:', result.spreadsheetUrl);
+      }
     } catch (err) {
       setGenerationStep('error');
       setError(err instanceof Error ? err.message : 'Slide generation failed');

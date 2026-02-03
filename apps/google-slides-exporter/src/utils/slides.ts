@@ -1,4 +1,4 @@
-import type { TemplateInfo, SlideGenerationResult } from '../types';
+import type { TemplateInfo, SlideGenerationResult, DonutChartConfig } from '../types';
 
 // Make Google API calls directly from the frontend (not through edge function)
 // This is necessary because OAuth tokens are tied to the user's browser origin
@@ -37,9 +37,64 @@ export async function generateSlides(params: {
   templateId: string;
   slideName: string;
   replacements: Record<string, string>;
+  charts?: DonutChartConfig[];
 }): Promise<SlideGenerationResult> {
-  const { accessToken, templateId, slideName, replacements } = params;
+  const { accessToken, templateId, slideName, replacements, charts } = params;
 
+  // If charts are requested, use the edge function that supports chart creation
+  if (charts && charts.length > 0) {
+    const edgeFunctionUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/slides-generator';
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    console.log('Sending request to edge function with', charts.length, 'charts');
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        accessToken,
+        templateId,
+        slideName,
+        replacements,
+        charts,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Edge function error response:', errorText);
+
+      let errorMessage = `Failed to generate slides with charts: ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error || errorMessage;
+      } catch (e) {
+        // Not JSON, use the text as-is
+        if (errorText) errorMessage = errorText;
+      }
+
+      // Special handling for 401 errors
+      if (response.status === 401) {
+        errorMessage = 'Authentication failed. Please re-authenticate to grant Sheets API access.';
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return {
+      deckId: result.deckId,
+      link: result.link,
+      spreadsheetId: result.spreadsheetId,
+      spreadsheetUrl: result.spreadsheetUrl,
+    };
+  }
+
+  // Otherwise, use the original frontend-based approach for text-only replacements
   // Step 1: Get the template presentation to read its structure
   console.log('Reading template:', templateId);
   const templateResponse = await fetch(

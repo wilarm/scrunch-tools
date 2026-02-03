@@ -2,6 +2,7 @@ const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const SCOPES = [
   'https://www.googleapis.com/auth/drive',
   'https://www.googleapis.com/auth/presentations',
+  'https://www.googleapis.com/auth/spreadsheets',
 ];
 
 interface AuthConfig {
