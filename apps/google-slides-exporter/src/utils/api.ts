@@ -232,8 +232,9 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
   const charts: DonutChartConfig[] = [];
 
   // Sentiment Chart
+  // Note: brand_sentiment_score comes as a whole number (e.g., 75), not a decimal (0.75)
   if (data.brand_sentiment_score != null) {
-    const sentimentPct = data.brand_sentiment_score * 100;
+    const sentimentPct = data.brand_sentiment_score; // Already a percentage value
     charts.push({
       title: 'Sentiment',
       sheetName: 'Sentiment',
@@ -245,6 +246,7 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
   }
 
   // Brand Presence Chart
+  // Note: brand_presence_percentage comes as a decimal (e.g., 0.45 for 45%)
   if (data.brand_presence_percentage != null) {
     const presencePct = data.brand_presence_percentage * 100;
     charts.push({
@@ -258,8 +260,9 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
   }
 
   // Position Chart
+  // Note: brand_position_score comes as a whole number (e.g., 82), not a decimal (0.82)
   if (data.brand_position_score != null) {
-    const positionPct = data.brand_position_score * 100;
+    const positionPct = data.brand_position_score; // Already a percentage value
     charts.push({
       title: 'Position',
       sheetName: 'Position',

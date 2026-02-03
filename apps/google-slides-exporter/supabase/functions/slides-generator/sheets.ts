@@ -188,6 +188,15 @@ export async function createDonutChart(
                       },
                     },
                   },
+                  // Transparent background (alpha = 0 for fully transparent)
+                  backgroundColorStyle: {
+                    rgbColor: {
+                      red: 1,
+                      green: 1,
+                      blue: 1,
+                      alpha: 0,
+                    },
+                  },
                 },
                 position: {
                   overlayPosition: {
