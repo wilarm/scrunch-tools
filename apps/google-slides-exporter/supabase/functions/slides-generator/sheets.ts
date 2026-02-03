@@ -188,15 +188,8 @@ export async function createDonutChart(
                       },
                     },
                   },
-                  // Transparent background (alpha = 0 for fully transparent)
-                  backgroundColorStyle: {
-                    rgbColor: {
-                      red: 1,
-                      green: 1,
-                      blue: 1,
-                      alpha: 0,
-                    },
-                  },
+                  // Note: Transparent backgrounds (alpha channel) are not supported by the API
+                  // Charts will use default white background
                 },
                 position: {
                   overlayPosition: {
