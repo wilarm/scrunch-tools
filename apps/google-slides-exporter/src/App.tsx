@@ -6,7 +6,7 @@ import ProgressTracker from './components/ProgressTracker';
 import { fetchBrandMetrics, fetchBrands, validateQueryFields, buildReplacements, buildChartConfigs, QUERY_METRICS } from './utils/api';
 import { initiateGoogleAuth, isOAuthCallback, handleOAuthCallback } from './utils/oauth';
 import { validateTemplate, generateSlides, extractTemplateId } from './utils/slides';
-import { DEFAULT_TEMPLATE_ID } from './utils/constants';
+import { DEFAULT_TEMPLATE_ID, DEFAULT_SHEETS_TEMPLATE_ID } from './utils/constants';
 import type { FormState, TemplateInfo, GenerationStep, Brand } from './types';
 
 function App() {
@@ -190,6 +190,7 @@ function App() {
         slideName: formState.slideName,
         replacements,
         charts: charts.length > 0 ? charts : undefined,
+        sheetsTemplateId: DEFAULT_SHEETS_TEMPLATE_ID, // Use pre-styled sheets template
       });
 
       // Step 4: Done

@@ -237,10 +237,10 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
     const sentimentPct = data.brand_sentiment_score; // Already a percentage value
     charts.push({
       title: 'Sentiment',
-      sheetName: 'Sentiment',
+      sheetName: 'Brand_Sentiment', // Match template sheet name
       data: [
-        { label: 'Positive', value: sentimentPct },
-        { label: 'Other', value: 100 - sentimentPct },
+        { label: 'Value 1', value: sentimentPct },
+        { label: 'Value 2', value: 100 - sentimentPct },
       ],
     });
   }
@@ -251,10 +251,10 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
     const presencePct = data.brand_presence_percentage * 100;
     charts.push({
       title: 'Brand Presence',
-      sheetName: 'BrandPresence',
+      sheetName: 'Brand_Presence', // Match template sheet name
       data: [
-        { label: 'Present', value: presencePct },
-        { label: 'Not Present', value: 100 - presencePct },
+        { label: 'Value 1', value: presencePct },
+        { label: 'Value 2', value: 100 - presencePct },
       ],
     });
   }
@@ -265,10 +265,10 @@ export function buildChartConfigs(data: QueryResult): DonutChartConfig[] {
     const positionPct = data.brand_position_score; // Already a percentage value
     charts.push({
       title: 'Position',
-      sheetName: 'Position',
+      sheetName: 'Brand_Position', // Match template sheet name
       data: [
-        { label: 'Top Position', value: positionPct },
-        { label: 'Other', value: 100 - positionPct },
+        { label: 'Value 1', value: positionPct },
+        { label: 'Value 2', value: 100 - positionPct },
       ],
     });
   }
