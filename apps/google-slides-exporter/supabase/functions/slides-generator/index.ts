@@ -87,8 +87,9 @@ async function copyTemplate(
   templateId: string,
   name: string
 ): Promise<{ id: string }> {
+  // Add supportsAllDrives=true to allow copying templates shared "Anyone with the link"
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${templateId}/copy`,
+    `https://www.googleapis.com/drive/v3/files/${templateId}/copy?supportsAllDrives=true`,
     {
       method: 'POST',
       headers: {
