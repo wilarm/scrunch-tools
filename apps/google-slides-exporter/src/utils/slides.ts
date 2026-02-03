@@ -38,8 +38,9 @@ export async function generateSlides(params: {
   slideName: string;
   replacements: Record<string, string>;
   charts?: DonutChartConfig[];
+  sheetsTemplateId?: string;
 }): Promise<SlideGenerationResult> {
-  const { accessToken, templateId, slideName, replacements, charts } = params;
+  const { accessToken, templateId, slideName, replacements, charts, sheetsTemplateId } = params;
 
   // If charts are requested, use the edge function that supports chart creation
   if (charts && charts.length > 0) {
@@ -61,6 +62,7 @@ export async function generateSlides(params: {
         slideName,
         replacements,
         charts,
+        sheetsTemplateId,
       }),
     });
 

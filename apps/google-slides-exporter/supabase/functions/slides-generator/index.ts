@@ -1,6 +1,7 @@
 import {
   createSheet,
   createAndLinkDonutChart,
+  copyTemplateAndLinkCharts,
   inchesToEmu,
   type DonutChartConfig,
 } from './sheets.ts';
@@ -30,6 +31,7 @@ interface GenerateRequest {
   slideName: string;
   replacements: Record<string, string>;
   charts?: ChartConfig[];
+  sheetsTemplateId?: string; // Optional: ID of pre-styled Google Sheets template with charts
 }
 
 interface PreviewRequest {
@@ -277,7 +279,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Main generation endpoint
-    const { accessToken, templateId, slideName, replacements, charts }: GenerateRequest = await req.json();
+    const { accessToken, templateId, slideName, replacements, charts, sheetsTemplateId }: GenerateRequest = await req.json();
 
     if (!accessToken || !templateId || !slideName || !replacements) {
       return new Response(
@@ -319,18 +321,42 @@ Deno.serve(async (req: Request) => {
 
     // Step 4: Create charts if requested
     if (charts && charts.length > 0) {
-      // Create a Google Sheet for the chart data
       const sheetName = `${slideName} - Data`;
-      const sheet = await createSheet(accessToken, sheetName);
-      spreadsheetId = sheet.id;
-      spreadsheetUrl = sheet.spreadsheetUrl;
 
-      // Get the presentation again to find slide IDs (after text replacement)
-      const presentation = await getPresentation(accessToken, deckId);
-      const slides = presentation.slides || [];
+      // Check if we should use template approach or create charts via API
+      if (sheetsTemplateId) {
+        // Template approach: Copy pre-styled sheets template and update data
+        console.log('Using sheets template approach with template:', sheetsTemplateId);
 
-      // Create each chart
-      for (const chartConfig of charts) {
+        const result = await copyTemplateAndLinkCharts(
+          accessToken,
+          sheetsTemplateId,
+          deckId,
+          charts.map(c => ({
+            title: c.title,
+            data: c.data,
+            sheetName: c.sheetName,
+          })),
+          chartPlaceholderPositions,
+          sheetName
+        );
+
+        spreadsheetId = result.spreadsheetId;
+        spreadsheetUrl = result.spreadsheetUrl;
+      } else {
+        // API approach: Create blank sheet and generate charts via API
+        console.log('Using API approach to create charts');
+
+        const sheet = await createSheet(accessToken, sheetName);
+        spreadsheetId = sheet.id;
+        spreadsheetUrl = sheet.spreadsheetUrl;
+
+        // Get the presentation again to find slide IDs (after text replacement)
+        const presentation = await getPresentation(accessToken, deckId);
+        const slides = presentation.slides || [];
+
+        // Create each chart
+        for (const chartConfig of charts) {
         // Build the expected placeholder name
         const placeholderName = `{{${chartConfig.title.toLowerCase().replace(/\s+/g, '_')}_chart}}`;
 
@@ -384,6 +410,7 @@ Deno.serve(async (req: Request) => {
             height: inchesToEmu(position.height),
           }
         );
+        }
       }
     }
 

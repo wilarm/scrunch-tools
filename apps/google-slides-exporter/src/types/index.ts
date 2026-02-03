@@ -7,6 +7,7 @@ export interface FormState {
   templateId: string;
   metrics: string[];
   slideName: string;
+  sheetsTemplateId?: string; // Optional: Pre-styled Google Sheets template ID for charts
   // Optional filters
   tag?: string;
   aiPlatform?: string;

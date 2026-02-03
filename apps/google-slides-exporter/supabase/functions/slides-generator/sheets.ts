@@ -34,7 +34,41 @@ function hexToRgb(hex: string): { red: number; green: number; blue: number } {
   };
 }
 
-// Create a new Google Sheet
+// Copy a Google Sheets template (for using pre-styled charts)
+export async function copySheetTemplate(
+  accessToken: string,
+  templateId: string,
+  name: string
+): Promise<{ id: string; spreadsheetUrl: string }> {
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${templateId}/copy?supportsAllDrives=true`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to copy sheets template: ${error}`);
+  }
+
+  const data = await response.json();
+
+  // Get the spreadsheet URL
+  const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${data.id}/edit`;
+
+  return {
+    id: data.id,
+    spreadsheetUrl: spreadsheetUrl,
+  };
+}
+
+// Create a new Google Sheet (blank)
 export async function createSheet(
   accessToken: string,
   name: string
@@ -312,7 +346,7 @@ export function inchesToEmu(inches: number): number {
   return Math.round(inches * 914400);
 }
 
-// Helper function to create complete chart workflow
+// Helper function to create complete chart workflow (creates charts via API)
 export async function createAndLinkDonutChart(
   accessToken: string,
   spreadsheetId: string,
@@ -331,4 +365,52 @@ export async function createAndLinkDonutChart(
 
   // Step 4: Link to slide
   await linkChartToSlide(accessToken, presentationId, spreadsheetId, chartId, position);
+}
+
+// Helper function using template approach (uses pre-styled charts from template)
+export async function copyTemplateAndLinkCharts(
+  accessToken: string,
+  sheetsTemplateId: string,
+  presentationId: string,
+  chartConfigs: DonutChartConfig[],
+  chartPositions: Map<string, ChartPosition>,
+  name: string
+): Promise<{ spreadsheetId: string; spreadsheetUrl: string }> {
+  // Step 1: Copy the sheets template
+  const { id: spreadsheetId, spreadsheetUrl } = await copySheetTemplate(
+    accessToken,
+    sheetsTemplateId,
+    name
+  );
+
+  // Step 2: Update data in each sheet
+  for (const config of chartConfigs) {
+    await populateSheetData(accessToken, spreadsheetId, config.sheetName, config.data);
+  }
+
+  // Step 3: Get all charts from the template
+  const charts = await getSpreadsheetCharts(accessToken, spreadsheetId);
+
+  // Step 4: Link charts to slides based on sheet name matching
+  for (const chart of charts) {
+    // Find matching chart position by sheet name
+    const matchingConfig = chartConfigs.find(c => c.sheetName === chart.title);
+    if (matchingConfig) {
+      // Find position by chart title (e.g., "sentiment_chart")
+      const placeholderKey = `${matchingConfig.title.toLowerCase().replace(/\s+/g, '_')}_chart`;
+      const position = chartPositions.get(placeholderKey);
+
+      if (position) {
+        await linkChartToSlide(
+          accessToken,
+          presentationId,
+          spreadsheetId,
+          chart.chartId,
+          position
+        );
+      }
+    }
+  }
+
+  return { spreadsheetId, spreadsheetUrl };
 }
