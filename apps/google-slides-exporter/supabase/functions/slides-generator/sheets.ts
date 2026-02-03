@@ -141,8 +141,8 @@ export async function createDonutChart(
   sheetId: number,
   config: DonutChartConfig
 ): Promise<number> {
-  const primaryColor = hexToRgb(config.primaryColor || '#97bb3b');
-  const secondaryColor = hexToRgb(config.secondaryColor || '#dfded2');
+  // Note: Google Sheets API v4 does not support custom colors for pie chart slices
+  // The API will use default colors. Custom colors would require manual chart editing after creation.
 
   const response = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
@@ -159,7 +159,7 @@ export async function createDonutChart(
               chart: {
                 spec: {
                   pieChart: {
-                    legendPosition: 'NO_LEGEND', // No legend (correct enum value)
+                    legendPosition: 'NO_LEGEND',
                     pieHole: 0.75, // 75% donut hole
                     domain: {
                       sourceRange: {
@@ -187,11 +187,6 @@ export async function createDonutChart(
                         ],
                       },
                     },
-                    // Apply custom colors to pie slices (inside pieChart)
-                    slices: [
-                      { color: primaryColor },
-                      { color: secondaryColor },
-                    ],
                   },
                 },
                 position: {
