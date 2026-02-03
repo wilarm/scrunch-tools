@@ -158,9 +158,8 @@ export async function createDonutChart(
             addChart: {
               chart: {
                 spec: {
-                  title: '', // No chart title
                   pieChart: {
-                    legendPosition: 'NONE', // No legend
+                    legendPosition: 'NO_LEGEND', // No legend (correct enum value)
                     pieHole: 0.75, // 75% donut hole
                     domain: {
                       sourceRange: {
@@ -188,15 +187,11 @@ export async function createDonutChart(
                         ],
                       },
                     },
-                  },
-                  // Apply custom colors to slices
-                  colors: [
-                    { rgbColor: primaryColor },
-                    { rgbColor: secondaryColor },
-                  ],
-                  // Hide chart borders
-                  border: {
-                    color: { rgbColor: { red: 1, green: 1, blue: 1 } },
+                    // Apply custom colors to pie slices (inside pieChart)
+                    slices: [
+                      { color: primaryColor },
+                      { color: secondaryColor },
+                    ],
                   },
                 },
                 position: {
