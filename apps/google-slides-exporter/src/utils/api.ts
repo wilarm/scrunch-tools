@@ -111,13 +111,8 @@ export function validateQueryFields(fields: string[]): { valid: boolean; error?:
     return { valid: false, error: 'Please select at least one metric.' };
   }
 
-  const selectedCompetitorMetrics = fields.filter(f => COMPETITOR_METRICS.includes(f));
-  if (selectedCompetitorMetrics.length > 0) {
-    const hasCompetitorDimension = fields.some(f => COMPETITOR_DIMENSIONS.includes(f));
-    if (!hasCompetitorDimension) {
-      return { valid: false, error: 'Competitor metrics require competitor_id or competitor_name.' };
-    }
-  }
+  // Note: Competitor dimensions (competitor_id, competitor_name) are automatically
+  // included by the API when competitor metrics are requested, so no need to validate them
 
   return { valid: true };
 }
