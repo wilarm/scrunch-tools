@@ -218,15 +218,19 @@ async function findChartPlaceholderPositions(
           const transform = element.transform || {};
           const size = element.size || {};
 
+          // Note: transform and size values from Google Slides API are already in EMU
+          // Store them directly without conversion
           positions.set(placeholder, {
             slideObjectId: slide.objectId!,
-            x: emuToInches(transform.translateX || 0),
-            y: emuToInches(transform.translateY || 0),
-            width: emuToInches(size.width?.magnitude || inchesToEmu(3)),
-            height: emuToInches(size.height?.magnitude || inchesToEmu(3)),
+            x: transform.translateX || 0,
+            y: transform.translateY || 0,
+            width: size.width?.magnitude || inchesToEmu(3),
+            height: size.height?.magnitude || inchesToEmu(3),
           });
 
-          console.log(`Found chart placeholder ${placeholder} at position:`, positions.get(placeholder));
+          const pos = positions.get(placeholder);
+          console.log(`Found chart placeholder ${placeholder} at position (EMU): x=${pos?.x}, y=${pos?.y}, w=${pos?.width}, h=${pos?.height}`);
+          console.log(`  (inches: x=${emuToInches(pos?.x || 0).toFixed(2)}, y=${emuToInches(pos?.y || 0).toFixed(2)}, w=${emuToInches(pos?.width || 0).toFixed(2)}, h=${emuToInches(pos?.height || 0).toFixed(2)})`);
         }
       }
     }

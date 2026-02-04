@@ -390,17 +390,24 @@ export async function copyTemplateAndLinkCharts(
 
   // Step 3: Get all charts from the template
   const charts = await getSpreadsheetCharts(accessToken, spreadsheetId);
+  console.log(`Found ${charts.length} charts in template:`, charts);
 
   // Step 4: Link charts to slides based on sheet name matching
   for (const chart of charts) {
+    console.log(`Processing chart from sheet: ${chart.title}, chartId: ${chart.chartId}`);
+
     // Find matching chart position by sheet name
     const matchingConfig = chartConfigs.find(c => c.sheetName === chart.title);
     if (matchingConfig) {
       // Find position by chart title (e.g., "sentiment_chart")
-      const placeholderKey = `${matchingConfig.title.toLowerCase().replace(/\s+/g, '_')}_chart`;
+      const placeholderKey = `{{${matchingConfig.title.toLowerCase().replace(/\s+/g, '_')}_chart}}`;
+      console.log(`Looking for placeholder: ${placeholderKey}`);
+      console.log(`Available placeholders:`, Array.from(chartPositions.keys()));
+
       const position = chartPositions.get(placeholderKey);
 
       if (position) {
+        console.log(`Found position for ${placeholderKey}, linking chart...`);
         await linkChartToSlide(
           accessToken,
           presentationId,
@@ -408,7 +415,12 @@ export async function copyTemplateAndLinkCharts(
           chart.chartId,
           position
         );
+        console.log(`Successfully linked chart ${chart.chartId}`);
+      } else {
+        console.warn(`No position found for placeholder ${placeholderKey}`);
       }
+    } else {
+      console.warn(`No matching config found for sheet: ${chart.title}`);
     }
   }
 
