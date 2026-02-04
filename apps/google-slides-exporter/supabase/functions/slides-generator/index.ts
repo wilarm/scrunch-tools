@@ -310,13 +310,10 @@ Deno.serve(async (req: Request) => {
       // Find positions of chart placeholders in the template
       chartPlaceholderPositions = await findChartPlaceholderPositions(presentation, chartPlaceholders);
 
-      // Add chart placeholders to replacements (will be replaced with empty string)
-      for (const placeholder of chartPlaceholders) {
-        replacements[placeholder] = '';
-      }
+      // DO NOT add chart placeholders to replacements yet - we'll delete them AFTER linking charts
     }
 
-    // Step 3: Replace placeholders (including removing chart placeholders)
+    // Step 3: Replace text placeholders (but NOT chart placeholders yet)
     await replaceTextInSlides(accessToken, deckId, replacements);
 
     // Step 4: Create charts if requested
@@ -412,9 +409,21 @@ Deno.serve(async (req: Request) => {
         );
         }
       }
+
+      // Step 5: Now remove the chart placeholder text (after charts are linked)
+      if (charts && charts.length > 0) {
+        console.log('Removing chart placeholder text...');
+        const chartPlaceholderReplacements: Record<string, string> = {};
+        const chartPlaceholders = charts.map(c => `{{${c.title.toLowerCase().replace(/\s+/g, '_')}_chart}}`);
+        for (const placeholder of chartPlaceholders) {
+          chartPlaceholderReplacements[placeholder] = '';
+        }
+        await replaceTextInSlides(accessToken, deckId, chartPlaceholderReplacements);
+        console.log('Chart placeholders removed');
+      }
     }
 
-    // Step 4: Return result
+    // Step 6: Return result
     return new Response(
       JSON.stringify({
         deckId,
