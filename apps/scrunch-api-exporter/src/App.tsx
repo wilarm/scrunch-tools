@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Loader2, AlertCircle } from 'lucide-react';
+import { Download, Loader2, AlertCircle, FileDown } from 'lucide-react';
 import { fetchAndFlattenData, generateCSV, validateQueryFields, DEFAULT_LIMIT } from './utils/api';
 import {
   FieldSelector,
@@ -185,7 +185,10 @@ function App() {
               <a href="/">
                 <img src={`${import.meta.env.BASE_URL}scrunch-logo.svg`} alt="Scrunch" className="h-8" />
               </a>
-              <span className="text-sm text-gray-600">API Exporter</span>
+              <div className="flex items-center gap-2">
+                <FileDown className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-gray-900">API Exporter</span>
+              </div>
             </div>
           </div>
         </header>

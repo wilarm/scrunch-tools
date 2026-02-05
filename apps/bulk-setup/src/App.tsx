@@ -754,7 +754,10 @@ function App() {
               <a href="/">
                 <img src={`${import.meta.env.BASE_URL}scrunch-logo.svg`} alt="Scrunch" className="h-8" />
               </a>
-              <span className="text-sm text-gray-600">Bulk configuration tool</span>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-medium text-gray-900">Bulk Setup</span>
+              </div>
             </div>
             <div className="relative">
               <button

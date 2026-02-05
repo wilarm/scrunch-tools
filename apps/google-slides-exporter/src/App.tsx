@@ -222,14 +222,14 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
-            <a href="/" className="hover:opacity-80 transition-opacity">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <a href="/">
               <img src="/slides/scrunch-logo.svg" alt="Scrunch" className="h-8" />
             </a>
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-orange-600" />
-              <span className="text-lg font-semibold text-gray-900">Slides Generator</span>
+              <span className="text-sm font-medium text-gray-900">Slides Generator</span>
             </div>
           </div>
         </div>
