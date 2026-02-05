@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, Loader2, AlertCircle, FileDown } from 'lucide-react';
-import { fetchAndFlattenData, generateCSV, validateQueryFields, DEFAULT_LIMIT } from './utils/api';
+import { fetchAndFlattenData, generateCSV, validateQueryFields, fetchBrands, DEFAULT_LIMIT } from './utils/api';
+import type { Brand } from './utils/api';
 import {
   FieldSelector,
   RESPONSES_FIELD_GROUPS,
@@ -35,6 +36,32 @@ function App() {
   const [showApiCall, setShowApiCall] = useState(false);
   const [apiCallUrl, setApiCallUrl] = useState('');
   const [showRowExplosionWarning, setShowRowExplosionWarning] = useState(false);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isFetchingBrands, setIsFetchingBrands] = useState(false);
+
+  const handleApiKeyChange = async (newApiKey: string) => {
+    setApiKey(newApiKey);
+
+    if (newApiKey.length >= 20) {
+      setIsFetchingBrands(true);
+      setError('');
+      try {
+        const fetchedBrands = await fetchBrands(newApiKey);
+        setBrands(fetchedBrands);
+
+        if (fetchedBrands.length === 1) {
+          setBrandId(fetchedBrands[0].id.toString());
+        }
+      } catch {
+        setBrands([]);
+      } finally {
+        setIsFetchingBrands(false);
+      }
+    } else {
+      setBrands([]);
+      setBrandId('');
+    }
+  };
 
   const generateApiCallUrl = () => {
     if (!brandId || !startDate || !endDate) {
@@ -239,26 +266,59 @@ function App() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     API Key <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="Enter your API key"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => handleApiKeyChange(e.target.value)}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      placeholder="Enter your API key"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApiKeyChange(apiKey)}
+                      disabled={isFetchingBrands || apiKey.length < 20}
+                      className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors whitespace-nowrap"
+                      title="Refresh brands"
+                    >
+                      {isFetchingBrands ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
+                  {isFetchingBrands && (
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+                      Loading brands...
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Brand ID <span className="text-red-500">*</span>
+                    Brand <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={brandId}
-                    onChange={(e) => setBrandId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="Enter brand ID"
-                  />
+                  {brands.length > 0 ? (
+                    <select
+                      value={brandId}
+                      onChange={(e) => setBrandId(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    >
+                      <option value="">Select a brand</option>
+                      {brands.map(brand => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={brandId}
+                      onChange={(e) => setBrandId(e.target.value)}
+                      placeholder="Enter API key to load brands"
+                      disabled
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed transition"
+                    />
+                  )}
                 </div>
               </div>
 

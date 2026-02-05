@@ -1,3 +1,9 @@
+export interface Brand {
+  id: number;
+  name: string;
+  website: string;
+}
+
 export const DEFAULT_LIMIT = 1000;
 const MAX_ROWS = 200000;
 
@@ -260,6 +266,39 @@ export function generateCSV(data: Record<string, unknown>[], selectedColumns?: s
   }
 
   return csvRows.join('\n');
+}
+
+export async function fetchBrands(apiKey: string): Promise<Brand[]> {
+  const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
+
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      apiKey,
+      endpoint: 'brands',
+      limit: 100,
+      offset: 0,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch brands: ${response.status} ${response.statusText}`);
+  }
+
+  const json = await response.json();
+
+  if (json.items && Array.isArray(json.items)) {
+    return json.items as Brand[];
+  }
+
+  if (Array.isArray(json)) {
+    return json as Brand[];
+  }
+
+  return [];
 }
 
 export const AVAILABLE_COLUMNS = FIELD_ORDER;
