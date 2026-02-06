@@ -296,7 +296,7 @@ function App() {
                       <option value="">Select a brand</option>
                       {brands.map(brand => (
                         <option key={brand.id} value={brand.id}>
-                          {brand.name}
+                          {brand.name} ({brand.id})
                         </option>
                       ))}
                     </select>
