@@ -78,7 +78,6 @@ export function formatPrimaryLocation(location?: PrimaryLocation): string {
   const parts = [];
   if (location.city) parts.push(location.city);
   if (location.region) parts.push(location.region);
-  if (location.country && parts.length < 2) parts.push(location.country);
 
   return parts.join(', ') || 'Unknown Location';
 }

@@ -66,11 +66,10 @@ export function replacePromptVariables(
       // Handle string format (e.g., "Miami, FL")
       locationString = primaryLocation;
     } else {
-      // Handle object format with city, region, country
+      // Handle object format with city, region — omit country code
       locationString = [
         primaryLocation.city,
         primaryLocation.region,
-        primaryLocation.country,
       ]
         .filter(Boolean)
         .join(', ');

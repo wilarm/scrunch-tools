@@ -137,24 +137,42 @@ app.post('/api/scrunch/enrich', async (req, res) => {
   try {
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    const systemPrompt = `You are a precise business research assistant. Your task is to identify the primary headquarters location of brands.
+    const systemPrompt = `You are a precise business research assistant. Your task is to research brands and return structured data about them.
 
 Return only valid JSON in this exact format:
 {
-  "primary_location": "City, ST" (US) or "City, Country" (international),
-  "confidence": 0.95
+  "name": "Official Brand Name",
+  "alternative_names": ["Alt Name 1", "Alt Name 2"],
+  "primary_location": {
+    "city": "San Francisco",
+    "region": "CA",
+    "country": "US",
+    "confidence": 0.95
+  },
+  "competitors": [
+    {
+      "name": "Competitor Name",
+      "websites": ["https://competitor.com"],
+      "confidence": 0.8
+    }
+  ]
 }
 
 Format requirements:
-- US: "City, ST" using 2-letter state code (e.g., "New York, NY")
-- International: "City, Country" (e.g., "London, UK")
-- Use the city where the main corporate office is located
-- Include a confidence score from 0 to 1 based on the quality and clarity of available information
+- name: The official/common brand name
+- alternative_names: Other names the brand is known by (abbreviations, former names, etc.). Can be empty array.
+- primary_location: Where the main corporate office is located
+  - region: 2-letter state code for US (e.g., "CA"), province/region for international
+  - country: 2-letter country code (e.g., "US", "UK", "AU")
+  - confidence: 0 to 1 based on quality of information
+- competitors: 3-5 direct competitors in the same industry
+  - websites: The competitor's main website URL
+  - confidence: 0 to 1 for how direct a competitor they are
 - Prioritize official company information`;
 
     const userMessage = brandName
-      ? `What is the primary location of ${brandName}? Website: ${website}`
-      : `What is the primary location of the company at ${website}?`;
+      ? `Research the brand "${brandName}" (website: ${website}). Return their official name, alternative names, headquarters location, and top competitors.`
+      : `Research the company at ${website}. Return their official name, alternative names, headquarters location, and top competitors.`;
 
     const response = await openai.responses.create({
       model: 'gpt-5',
