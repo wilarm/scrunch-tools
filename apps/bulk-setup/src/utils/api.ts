@@ -1,4 +1,5 @@
 import { Brand, PromptInput } from '../types/brand';
+import { SUPABASE_FUNCTIONS_URL } from '../lib/scrunchApi';
 
 type CreateBrandPayload = {
   name: string;
@@ -59,7 +60,7 @@ export async function createBrand(apiKey: string, brand: Brand): Promise<{ id: n
     key_topics: brand.key_topics ?? [],
   };
 
-  const proxyUrl = 'http://localhost:3001/api/scrunch/create-brand';
+  const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/create-brand`;
 
   const response = await fetch(proxyUrl, {
     method: 'POST',
@@ -106,7 +107,7 @@ export async function createPrompt(
     throw new Error('At least one platform is required');
   }
 
-  const proxyUrl = 'http://localhost:3001/api/scrunch/create-prompt';
+  const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/create-prompt`;
 
   const response = await fetch(proxyUrl, {
     method: 'POST',

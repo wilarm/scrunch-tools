@@ -5,6 +5,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Prevent the server from crashing on unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
 const app = express();
 const PORT = 3001;
 

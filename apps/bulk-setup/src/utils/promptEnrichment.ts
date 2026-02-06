@@ -1,4 +1,4 @@
-import { listBrands, BrandListing } from '../lib/scrunchApi';
+import { listBrands, BrandListing, SUPABASE_FUNCTIONS_URL } from '../lib/scrunchApi';
 import { PromptVariant } from '../components/PromptPreviewTable';
 import { replacePromptVariables } from './promptParser';
 
@@ -67,8 +67,7 @@ export async function enrichPromptVariants(
     });
 
     try {
-      // Call the proxy endpoint directly for prompt enrichment
-      const proxyUrl = 'http://localhost:3001/api/scrunch/enrich';
+      const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/enrich`;
       const response = await fetch(proxyUrl, {
         method: 'POST',
         headers: {

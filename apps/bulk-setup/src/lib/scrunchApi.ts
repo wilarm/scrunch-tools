@@ -1,4 +1,5 @@
 export const SCRUNCH_API_BASE = import.meta.env.VITE_SCRUNCH_API_BASE_URL || 'https://api.scrunchai.com/v1';
+export const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 export function getScrunchHeaders(apiKey: string): Record<string, string> {
   return {
@@ -57,7 +58,7 @@ export async function listBrands(
   limit: number = 1000,
   offset: number = 0
 ): Promise<ListBrandsResponse> {
-  const proxyUrl = 'http://localhost:3001/api/scrunch/brands';
+  const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/list-brands`;
 
   let response: Response;
   try {
@@ -74,7 +75,7 @@ export async function listBrands(
     });
   } catch (error) {
     throw new Error(
-      `Network error while fetching brands. Please check your internet connection and make sure the proxy server is running (npm run proxy). ${error instanceof Error ? error.message : ''}`
+      `Network error while fetching brands. Please check your internet connection. ${error instanceof Error ? error.message : ''}`
     );
   }
 

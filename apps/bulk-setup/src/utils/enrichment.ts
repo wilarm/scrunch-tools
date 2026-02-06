@@ -1,9 +1,10 @@
 import { EnrichmentResult } from '../types/brand';
+import { SUPABASE_FUNCTIONS_URL } from '../lib/scrunchApi';
 
 export async function enrichWebsite(
   website: string
 ): Promise<EnrichmentResult> {
-  const proxyUrl = 'http://localhost:3001/api/scrunch/enrich';
+  const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/enrich`;
 
   const response = await fetch(proxyUrl, {
     method: 'POST',

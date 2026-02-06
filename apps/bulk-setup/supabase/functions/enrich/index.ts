@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { website } = await req.json();
+    const { website, brandName } = await req.json();
     if (!website) {
       return new Response(
         JSON.stringify({ error: "Missing website parameter" }),
@@ -99,7 +99,9 @@ const response = await openai.responses.create({
     },
     {
       role: "user",
-      content: `Research this website and provide enrichment data: ${website}`,
+      content: brandName
+        ? `Research the brand "${brandName}" (website: ${website}). Return their official name, alternative names, headquarters location, and top competitors.`
+        : `Research this website and provide enrichment data: ${website}`,
     },
   ],
   // If your SDK/version supports structured outputs here, use json_schema.
