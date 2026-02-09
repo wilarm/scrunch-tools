@@ -16,7 +16,7 @@ import { parseWebsites, generateBrands, reapplyTemplatesWithLocation } from './u
 import { createBrand, createPrompt } from './utils/api';
 import { enrichWebsitesWithConcurrency } from './utils/enrichment';
 import { parsePrompts, parseBrandIds, replacePromptVariables } from './utils/promptParser';
-import { enrichPromptVariants, updateVariantsWithEnrichment } from './utils/promptEnrichment';
+import { enrichPromptVariants, updateVariantsWithEnrichment, BatchEnrichmentResult } from './utils/promptEnrichment';
 import { expandTemplatePrompt, containsAllVariablesToken, validatePromptVariables } from './utils/variableExpansion';
 
 type WorkflowType = 'none' | 'brands' | 'prompts';
@@ -702,7 +702,7 @@ function App() {
     setIsEnrichingPrompts(true);
 
     try {
-      await enrichPromptVariants(
+      const enrichmentResults = await enrichPromptVariants(
         apiKey,
         promptVariants,
         (progress) => {
@@ -720,6 +720,22 @@ function App() {
           );
         }
       );
+
+      // Auto-populate the Advanced Variables sidebar with enriched values
+      if (enrichmentResults.length > 0) {
+        const targetBrandIds: number[] = brandIds.length > 0
+          ? brandIds
+          : brands.filter(b => b.brandApiId).map(b => b.brandApiId!);
+
+        const resultMap = new Map(enrichmentResults.map(r => [r.brandId, r]));
+
+        const names = targetBrandIds.map(id => resultMap.get(id)?.name || '');
+        const locations = targetBrandIds.map(id => resultMap.get(id)?.primaryLocation || '');
+
+        setPerBrandNames(names.join('\n'));
+        setPerBrandLocations(locations.join('\n'));
+        setShowAdvancedVariables(true);
+      }
     } catch (error) {
       alert(`Enrichment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

@@ -2,12 +2,6 @@ import { listBrands, BrandListing, SUPABASE_FUNCTIONS_URL } from '../lib/scrunch
 import { PromptVariant } from '../components/PromptPreviewTable';
 import { replacePromptVariables } from './promptParser';
 
-// Simplified enrichment result for prompt enrichment (only returns primary_location as string)
-interface PromptEnrichmentResult {
-  primary_location: string;
-  confidence?: number;
-}
-
 export interface PromptEnrichmentProgress {
   brandId: number;
   name?: string;
@@ -17,11 +11,17 @@ export interface PromptEnrichmentProgress {
   status?: 'loading' | 'success' | 'error';
 }
 
+export interface BatchEnrichmentResult {
+  brandId: number;
+  name: string;
+  primaryLocation: string;
+}
+
 export async function enrichPromptVariants(
   apiKey: string,
   variants: PromptVariant[],
   onProgress: (progress: PromptEnrichmentProgress) => void
-): Promise<void> {
+): Promise<BatchEnrichmentResult[]> {
   const uniqueBrandIds = Array.from(new Set(variants.map(v => v.brandId)));
 
   console.log('Fetching brands from Scrunch API...');
@@ -37,18 +37,15 @@ export async function enrichPromptVariants(
   }
 
   const brandMap = new Map<number, BrandListing>();
-
   for (const brand of brandsResponse.items) {
     brandMap.set(brand.id, brand);
   }
 
-  console.log(`Processing ${uniqueBrandIds.length} unique brand IDs`);
-
+  // Collect brands to enrich
+  const brandsToEnrich: { brandId: number; name: string; website: string }[] = [];
   for (const brandId of uniqueBrandIds) {
     const brand = brandMap.get(brandId);
-
     if (!brand) {
-      console.warn(`Brand ID ${brandId} not found in organization`);
       onProgress({
         brandId,
         status: 'error',
@@ -56,55 +53,78 @@ export async function enrichPromptVariants(
       });
       continue;
     }
+    brandsToEnrich.push({ brandId, name: brand.name, website: brand.website });
+  }
 
-    console.log(`Enriching brand ${brandId} (${brand.name}) from website: ${brand.website}`);
+  if (brandsToEnrich.length === 0) {
+    return [];
+  }
 
-    // Report loading state
-    onProgress({
-      brandId,
-      status: 'loading',
-      name: brand.name,
+  // Set all brands to loading
+  for (const b of brandsToEnrich) {
+    onProgress({ brandId: b.brandId, status: 'loading', name: b.name });
+  }
+
+  // Single batch API call
+  console.log(`Batch enriching ${brandsToEnrich.length} brands...`);
+  try {
+    const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/enrich-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brands: brandsToEnrich.map(b => ({ name: b.name, website: b.website })),
+      }),
     });
 
-    try {
-      const proxyUrl = `${SUPABASE_FUNCTIONS_URL}/enrich`;
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          website: brand.website,
-          brandName: brand.name
-        }),
-      });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
+    const { results } = await response.json();
+    console.log(`Batch enrichment returned ${results.length} results`);
+
+    // Map results back to brandIds by matching order (results match input order)
+    const enrichmentResults: BatchEnrichmentResult[] = [];
+    for (let i = 0; i < brandsToEnrich.length; i++) {
+      const brand = brandsToEnrich[i];
+      const result = results[i];
+
+      if (result?.primary_location) {
+        onProgress({
+          brandId: brand.brandId,
+          status: 'success',
+          name: brand.name,
+          primaryLocation: result.primary_location,
+        });
+        enrichmentResults.push({
+          brandId: brand.brandId,
+          name: brand.name,
+          primaryLocation: result.primary_location,
+        });
+      } else {
+        onProgress({
+          brandId: brand.brandId,
+          status: 'error',
+          error: 'No location returned',
+        });
       }
+    }
 
-      const enrichmentResult: PromptEnrichmentResult = await response.json();
-      console.log(`Successfully enriched brand ${brandId}, location: ${enrichmentResult.primary_location}, confidence: ${enrichmentResult.confidence}`);
-
+    console.log('Batch enrichment complete');
+    return enrichmentResults;
+  } catch (error) {
+    console.error('Batch enrichment failed:', error);
+    // Mark all brands as errored
+    for (const b of brandsToEnrich) {
       onProgress({
-        brandId,
-        status: 'success',
-        name: brand.name, // Use name from API, not from enrichment
-        primaryLocation: enrichmentResult.primary_location,
-        confidence: enrichmentResult.confidence,
-      });
-    } catch (error) {
-      console.error(`Failed to enrich brand ${brandId}:`, error);
-      onProgress({
-        brandId,
+        brandId: b.brandId,
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
+    throw error;
   }
-
-  console.log('Enrichment complete');
 }
 
 export function updateVariantsWithEnrichment(
