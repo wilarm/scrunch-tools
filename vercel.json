@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd apps/bulk-setup && npm install && npm run build && cd ../scrunch-api-exporter && npm install && npm run build && cd ../google-slides-exporter && npm install && npm run build",
+  "buildCommand": "cd apps/bulk-setup && npm install && npm run build && cd ../scrunch-api-exporter && npm install && npm run build && cd ../google-slides-exporter && npm install && npm run build && cd ../response-analyzer && npm install && npm run build",
   "outputDirectory": ".",
   "routes": [
     { "src": "/bulk-setup/assets/(.*)", "dest": "/apps/bulk-setup/dist/assets/$1" },
@@ -16,6 +16,11 @@
     { "src": "/slides/scrunch-logo.svg", "dest": "/apps/google-slides-exporter/dist/scrunch-logo.svg" },
     { "src": "/slides/(.*)", "dest": "/apps/google-slides-exporter/dist/index.html" },
     { "src": "/slides", "dest": "/apps/google-slides-exporter/dist/index.html" },
+
+    { "src": "/analyze/assets/(.*)", "dest": "/apps/response-analyzer/dist/assets/$1" },
+    { "src": "/analyze/scrunch-logo.svg", "dest": "/apps/response-analyzer/dist/scrunch-logo.svg" },
+    { "src": "/analyze/(.*)", "dest": "/apps/response-analyzer/dist/index.html" },
+    { "src": "/analyze", "dest": "/apps/response-analyzer/dist/index.html" },
 
     { "src": "/scrunch-logo.svg", "dest": "/apps/home/scrunch-logo.svg" },
     { "src": "/(.*)", "dest": "/apps/home/index.html" }
