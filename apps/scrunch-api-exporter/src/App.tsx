@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Loader2, AlertCircle, FileDown } from 'lucide-react';
+import { Download, Loader2, AlertCircle, FileDown, Filter } from 'lucide-react';
 import { fetchAndFlattenData, generateCSV, validateQueryFields, fetchBrands, DEFAULT_LIMIT } from './utils/api';
 import type { Brand } from './utils/api';
 import {
@@ -20,6 +20,13 @@ const MANY_TO_MANY_FIELDS = {
   query: ['ai_platform', 'tag', 'prompt_topic', 'competitor_id'],
 };
 
+const PLATFORM_OPTIONS = [
+  'chatgpt', 'claude', 'google_ai_overviews', 'perplexity',
+  'meta', 'google_ai_mode', 'google_gemini', 'copilot',
+];
+
+const STAGE_OPTIONS = ['Advice', 'Awareness', 'Evaluation', 'Comparison', 'Other'];
+
 function App() {
   const [activeTab, setActiveTab] = useState<'responses' | 'query'>('query');
   const [apiKey, setApiKey] = useState('');
@@ -38,6 +45,8 @@ function App() {
   const [showRowExplosionWarning, setShowRowExplosionWarning] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isFetchingBrands, setIsFetchingBrands] = useState(false);
+  const [filterPlatforms, setFilterPlatforms] = useState<string[]>([]);
+  const [filterStages, setFilterStages] = useState<string[]>([]);
 
   const handleApiKeyChange = async (newApiKey: string) => {
     setApiKey(newApiKey);
@@ -78,6 +87,9 @@ function App() {
     if (selectedFields.length > 0) {
       params.append('fields', selectedFields.join(','));
     }
+
+    filterPlatforms.forEach(p => params.append('platform', p));
+    filterStages.forEach(s => params.append('stage', s));
 
     return `${baseUrl}?${params.toString()}`;
   };
@@ -160,6 +172,8 @@ function App() {
         fetchAll,
         endpoint: activeTab,
         fields: activeTab === 'query' ? selectedFields : undefined,
+        filterPlatforms,
+        filterStages,
         onProgress: (loaded, total) => {
           setProgress(Math.round((loaded / total) * 100));
         },
@@ -376,6 +390,87 @@ function App() {
               </div>
 
               <div className="border-t pt-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Filters</h3>
+                <div className="bg-white rounded-lg border border-gray-200 px-5 py-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Filter className="w-4 h-4" />
+                      <span>Filter by:</span>
+                    </div>
+
+                    {/* Platform multi-select */}
+                    <div className="relative">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__clear__') {
+                            setFilterPlatforms([]);
+                          } else if (val && !filterPlatforms.includes(val)) {
+                            setFilterPlatforms([...filterPlatforms, val]);
+                          }
+                        }}
+                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Platform{filterPlatforms.length > 0 ? ` (${filterPlatforms.length})` : ''}</option>
+                        {filterPlatforms.length > 0 && <option value="__clear__">Clear filter</option>}
+                        {PLATFORM_OPTIONS.map(p => (
+                          <option key={p} value={p} disabled={filterPlatforms.includes(p)}>
+                            {filterPlatforms.includes(p) ? `✓ ${p}` : p}
+                          </option>
+                        ))}
+                      </select>
+                      {filterPlatforms.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {filterPlatforms.map(val => (
+                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                              {val}
+                              <button onClick={() => setFilterPlatforms(filterPlatforms.filter(p => p !== val))} className="hover:text-blue-900">×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stage multi-select */}
+                    <div className="relative">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__clear__') {
+                            setFilterStages([]);
+                          } else if (val && !filterStages.includes(val)) {
+                            setFilterStages([...filterStages, val]);
+                          }
+                        }}
+                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Stage{filterStages.length > 0 ? ` (${filterStages.length})` : ''}</option>
+                        {filterStages.length > 0 && <option value="__clear__">Clear filter</option>}
+                        {STAGE_OPTIONS.map(s => (
+                          <option key={s} value={s} disabled={filterStages.includes(s)}>
+                            {filterStages.includes(s) ? `✓ ${s}` : s}
+                          </option>
+                        ))}
+                      </select>
+                      {filterStages.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {filterStages.map(val => (
+                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                              {val}
+                              <button onClick={() => setFilterStages(filterStages.filter(s => s !== val))} className="hover:text-blue-900">×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
                 <h3 className="text-sm font-semibold text-gray-700 mb-4">Result Range</h3>
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -434,32 +529,6 @@ function App() {
                     />
                   </div>
 
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-amber-900 mb-2">Data limitations</h4>
-                        <p className="text-sm text-amber-800 mb-2">
-                          This export includes the first <strong>5 citations</strong> and first <strong>5 competitors</strong> from each response. For responses with additional citations or competitors, or for complete response analysis:
-                        </p>
-                        <ul className="text-sm text-amber-800 space-y-1 ml-4 list-disc">
-                          <li>Call the Scrunch API directly for full response data</li>
-                          <li>Review the full response object in the Scrunch app</li>
-                        </ul>
-                        <p className="text-xs text-amber-700 mt-3">
-                          Learn more:{' '}
-                          <a
-                            href="https://developers.scrunch.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline font-semibold hover:text-amber-900"
-                          >
-                            developers.scrunch.com
-                          </a>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </>
               )}
 

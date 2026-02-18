@@ -287,27 +287,7 @@ export const RESPONSES_FIELD_GROUPS: FieldGroup[] = [
   { name: 'Response', fields: ['response_text', 'stage', 'branded'] },
   { name: 'Persona', fields: ['persona_id', 'persona_name', 'tags', 'key_topics'] },
   { name: 'Brand Metrics', fields: ['brand_present', 'brand_sentiment', 'brand_position'] },
-  {
-    name: 'Competitors',
-    fields: [
-      'competitors_present',
-      'competitor_1_id', 'competitor_1_name', 'competitor_1_present', 'competitor_1_position', 'competitor_1_sentiment',
-      'competitor_2_id', 'competitor_2_name', 'competitor_2_present', 'competitor_2_position', 'competitor_2_sentiment',
-      'competitor_3_id', 'competitor_3_name', 'competitor_3_present', 'competitor_3_position', 'competitor_3_sentiment',
-      'competitor_4_id', 'competitor_4_name', 'competitor_4_present', 'competitor_4_position', 'competitor_4_sentiment',
-      'competitor_5_id', 'competitor_5_name', 'competitor_5_present', 'competitor_5_position', 'competitor_5_sentiment',
-    ],
-  },
-  {
-    name: 'Citations',
-    fields: [
-      'citation_1_domain', 'citation_1_source_type', 'citation_1_title', 'citation_1_url',
-      'citation_2_domain', 'citation_2_source_type', 'citation_2_title', 'citation_2_url',
-      'citation_3_domain', 'citation_3_source_type', 'citation_3_title', 'citation_3_url',
-      'citation_4_domain', 'citation_4_source_type', 'citation_4_title', 'citation_4_url',
-      'citation_5_domain', 'citation_5_source_type', 'citation_5_title', 'citation_5_url',
-    ],
-  },
+  { name: 'Competitors & Citations', fields: ['competitors_present', 'citations'] },
 ];
 
 export const RESPONSES_ALL_FIELDS = RESPONSES_FIELD_GROUPS.flatMap(g => g.fields);

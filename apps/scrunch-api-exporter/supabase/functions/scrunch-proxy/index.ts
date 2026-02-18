@@ -13,6 +13,8 @@ interface RequestBody {
   offset?: number;
   endpoint?: 'responses' | 'query' | 'brands';
   fields?: string[];
+  filterPlatforms?: string[];
+  filterStages?: string[];
 }
 
 type ScrunchResponse =
@@ -103,38 +105,10 @@ function flattenResponse(response: Response): Record<string, unknown> {
   };
 
   const citations = response.citations || [];
-  for (let i = 1; i <= 5; i++) {
-    const citation = citations[i - 1];
-    if (citation) {
-      flattened[`citation_${i}_domain`] = citation.domain || "";
-      flattened[`citation_${i}_source_type`] = citation.source_type || "";
-      flattened[`citation_${i}_title`] = citation.title || "";
-      flattened[`citation_${i}_url`] = citation.url || "";
-    } else {
-      flattened[`citation_${i}_domain`] = "";
-      flattened[`citation_${i}_source_type`] = "";
-      flattened[`citation_${i}_title`] = "";
-      flattened[`citation_${i}_url`] = "";
-    }
-  }
-
-  const competitors = response.competitors || [];
-  for (let i = 1; i <= 5; i++) {
-    const competitor = competitors[i - 1];
-    if (competitor) {
-      flattened[`competitor_${i}_id`] = competitor.id || "";
-      flattened[`competitor_${i}_name`] = competitor.name || "";
-      flattened[`competitor_${i}_present`] = competitor.present || "";
-      flattened[`competitor_${i}_position`] = competitor.position || "";
-      flattened[`competitor_${i}_sentiment`] = competitor.sentiment || "";
-    } else {
-      flattened[`competitor_${i}_id`] = "";
-      flattened[`competitor_${i}_name`] = "";
-      flattened[`competitor_${i}_present`] = "";
-      flattened[`competitor_${i}_position`] = "";
-      flattened[`competitor_${i}_sentiment`] = "";
-    }
-  }
+  flattened['citations'] = citations
+    .map(c => c.url || '')
+    .filter(Boolean)
+    .join('|');
 
   return flattened;
 }
@@ -148,7 +122,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { apiKey, brandId, startDate, endDate, endpoint = 'responses', fields = [], limit = 100, offset = 0 }: RequestBody = await req.json();
+    const { apiKey, brandId, startDate, endDate, endpoint = 'responses', fields = [], filterPlatforms = [], filterStages = [], limit = 100, offset = 0 }: RequestBody = await req.json();
 
     if (!apiKey) {
       return new Response(
@@ -221,6 +195,12 @@ Deno.serve(async (req: Request) => {
       url.searchParams.append("fields", fields.join(","));
       url.searchParams.append("limit", limit.toString());
       url.searchParams.append("offset", offset.toString());
+      if (filterPlatforms && filterPlatforms.length > 0) {
+        filterPlatforms.forEach(p => url.searchParams.append("platform", p));
+      }
+      if (filterStages && filterStages.length > 0) {
+        filterStages.forEach(s => url.searchParams.append("stage", s));
+      }
 
       const response = await fetch(url.toString(), {
         headers: {
@@ -272,6 +252,12 @@ Deno.serve(async (req: Request) => {
       url.searchParams.append("offset", offset.toString());
       if (fields && fields.length > 0) {
         url.searchParams.append("fields", fields.join(","));
+      }
+      if (filterPlatforms && filterPlatforms.length > 0) {
+        filterPlatforms.forEach(p => url.searchParams.append("platform", p));
+      }
+      if (filterStages && filterStages.length > 0) {
+        filterStages.forEach(s => url.searchParams.append("stage", s));
       }
 
       const response = await fetch(url.toString(), {
