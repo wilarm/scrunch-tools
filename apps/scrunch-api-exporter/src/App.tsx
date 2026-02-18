@@ -241,7 +241,7 @@ function App() {
                       : 'text-gray-600 hover:text-gray-800 pb-2'
                   }`}
                 >
-                  Query
+                  Metrics
                 </button>
                 <button
                   onClick={() => {
@@ -258,6 +258,29 @@ function App() {
                   Responses
                 </button>
               </div>
+              <p className="mt-3 text-xs text-gray-600">
+                {activeTab === 'query' ? (
+                  <>
+                    Data from the{' '}
+                    <code className="font-mono bg-black/10 px-1 py-0.5 rounded">/query/</code>
+                    {' '}endpoint —{' '}
+                  </>
+                ) : (
+                  <>
+                    Data from the{' '}
+                    <code className="font-mono bg-black/10 px-1 py-0.5 rounded">/responses/</code>
+                    {' '}endpoint —{' '}
+                  </>
+                )}
+                <a
+                  href="https://developers.scrunch.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold text-gray-700 hover:text-gray-900"
+                >
+                  developers.scrunch.com
+                </a>
+              </p>
             </div>
 
             <div className="p-8 space-y-6">
