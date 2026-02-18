@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, FileText } from 'lucide-react';
+import { Upload, FileText, Download } from 'lucide-react';
 
 interface FileUploadProps {
   onCSVLoaded: (rawText: string) => void;
@@ -106,6 +106,17 @@ export function FileUpload({ onCSVLoaded }: FileUploadProps) {
           </button>
         </div>
       )}
+
+      <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+        <p className="text-sm text-gray-400 mb-2">Don't have a responses CSV yet?</p>
+        <a
+          href="/export/"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          Export one from the API Exporter
+        </a>
+      </div>
     </div>
   );
 }
