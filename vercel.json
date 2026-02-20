@@ -2,7 +2,7 @@
   "buildCommand": "cd apps/bulk-setup && npm install && npm run build && cd ../scrunch-api-exporter && npm install && npm run build && cd ../google-slides-exporter && npm install && npm run build && cd ../response-analyzer && npm install && npm run build && cd ../axp-converter && npm install && npm run build",
   "outputDirectory": ".",
   "functions": {
-    "apps/axp-converter/api/claude.ts": {
+    "api/axp-claude.ts": {
       "memory": 256,
       "maxDuration": 30
     }
@@ -28,7 +28,7 @@
     { "src": "/analyze/(.*)", "dest": "/apps/response-analyzer/dist/index.html" },
     { "src": "/analyze", "dest": "/apps/response-analyzer/dist/index.html" },
 
-    { "src": "/axp/api/claude", "dest": "/apps/axp-converter/api/claude.ts" },
+    { "src": "/axp/api/claude", "dest": "/api/axp-claude.ts" },
     { "src": "/axp/assets/(.*)", "dest": "/apps/axp-converter/dist/assets/$1" },
     { "src": "/axp/scrunch-logo.svg", "dest": "/apps/axp-converter/dist/scrunch-logo.svg" },
     { "src": "/axp/(.*)", "dest": "/apps/axp-converter/dist/index.html" },
