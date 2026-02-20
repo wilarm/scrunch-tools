@@ -1,6 +1,12 @@
 {
-  "buildCommand": "cd apps/bulk-setup && npm install && npm run build && cd ../scrunch-api-exporter && npm install && npm run build && cd ../google-slides-exporter && npm install && npm run build && cd ../response-analyzer && npm install && npm run build",
+  "buildCommand": "cd apps/bulk-setup && npm install && npm run build && cd ../scrunch-api-exporter && npm install && npm run build && cd ../google-slides-exporter && npm install && npm run build && cd ../response-analyzer && npm install && npm run build && cd ../axp-converter && npm install && npm run build",
   "outputDirectory": ".",
+  "functions": {
+    "apps/axp-converter/api/claude.ts": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  },
   "routes": [
     { "src": "/bulk-setup/assets/(.*)", "dest": "/apps/bulk-setup/dist/assets/$1" },
     { "src": "/bulk-setup/scrunch-logo.svg", "dest": "/apps/bulk-setup/dist/scrunch-logo.svg" },
@@ -21,6 +27,12 @@
     { "src": "/analyze/scrunch-logo.svg", "dest": "/apps/response-analyzer/dist/scrunch-logo.svg" },
     { "src": "/analyze/(.*)", "dest": "/apps/response-analyzer/dist/index.html" },
     { "src": "/analyze", "dest": "/apps/response-analyzer/dist/index.html" },
+
+    { "src": "/axp/api/claude", "dest": "/apps/axp-converter/api/claude.ts" },
+    { "src": "/axp/assets/(.*)", "dest": "/apps/axp-converter/dist/assets/$1" },
+    { "src": "/axp/scrunch-logo.svg", "dest": "/apps/axp-converter/dist/scrunch-logo.svg" },
+    { "src": "/axp/(.*)", "dest": "/apps/axp-converter/dist/index.html" },
+    { "src": "/axp", "dest": "/apps/axp-converter/dist/index.html" },
 
     { "src": "/scrunch-logo.svg", "dest": "/apps/home/scrunch-logo.svg" },
     { "src": "/(.*)", "dest": "/apps/home/index.html" }
