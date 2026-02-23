@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { Upload, X, FileText } from 'lucide-react';
 import { UploadedFile } from '../types';
 
-const ACCEPTED_EXTENSIONS = ['.txt', '.md', '.text', '.markdown'];
+const ACCEPTED_EXTENSIONS = ['.txt', '.md', '.text', '.markdown', '.html', '.htm'];
 
 function isAcceptedFile(name: string): boolean {
   const lower = name.toLowerCase();
@@ -99,7 +99,7 @@ export function FileUpload({ onFilesLoaded, disabled }: FileUploadProps) {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".txt,.md,.text,.markdown"
+          accept=".txt,.md,.text,.markdown,.html,.htm"
           className="hidden"
           disabled={disabled}
           onChange={(e) => {
@@ -116,7 +116,7 @@ export function FileUpload({ onFilesLoaded, disabled }: FileUploadProps) {
           Drop text files here, or click to browse
         </p>
         <p className="text-sm text-gray-500">
-          Accepts .txt, .md, .text, .markdown — multiple files supported
+          Accepts .txt, .md, .html, .htm — multiple files supported
         </p>
         {loading && (
           <p className="text-sm text-indigo-600 mt-2 animate-pulse">Reading files...</p>

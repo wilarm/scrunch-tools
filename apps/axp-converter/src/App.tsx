@@ -3,6 +3,7 @@ import {
   Upload,
   X,
   FileText,
+  Code2,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -16,12 +17,13 @@ import {
 import JSZip from 'jszip';
 import { extractLinkPool } from './utils/urlExtractor';
 import { convertToMarkdown } from './utils/textToMarkdown';
+import { convertHtmlToMarkdown, isHtmlContent } from './utils/htmlToMarkdown';
 import { insertLinksWithClaude } from './utils/claudeApi';
 import { UploadedFile, ProcessedFile, LinkPoolEntry, AppState } from './types';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-const ACCEPTED_EXTENSIONS = ['.txt', '.md', '.text', '.markdown'];
+const ACCEPTED_EXTENSIONS = ['.txt', '.md', '.text', '.markdown', '.html', '.htm'];
 
 function isAccepted(name: string) {
   const l = name.toLowerCase();
@@ -37,6 +39,22 @@ function fmtBytes(b: number) {
 function outputName(name: string) {
   const dot = name.lastIndexOf('.');
   return (dot > 0 ? name.slice(0, dot) : name) + '.md';
+}
+
+function isHtmlFile(name: string): boolean {
+  const l = name.toLowerCase();
+  return l.endsWith('.html') || l.endsWith('.htm');
+}
+
+function chooseConverter(file: UploadedFile): string {
+  const l = file.name.toLowerCase();
+  // .md/.markdown files always use the text heuristic converter
+  if (l.endsWith('.md') || l.endsWith('.markdown')) return convertToMarkdown(file.rawText);
+  // .html/.htm files always use the HTML converter
+  if (l.endsWith('.html') || l.endsWith('.htm')) return convertHtmlToMarkdown(file.rawText);
+  // For .txt or pasted text: auto-detect based on content
+  if (isHtmlContent(file.rawText)) return convertHtmlToMarkdown(file.rawText);
+  return convertToMarkdown(file.rawText);
 }
 
 // ─── App ────────────────────────────────────────────────────────────────────
@@ -161,12 +179,15 @@ export default function App() {
     setAppState('converting');
     setStatusMessage('Converting text to markdown...');
 
-    const heuristic: ProcessedFile[] = uploadedFiles.map((f) => ({
-      name: f.name,
-      rawText: f.rawText,
-      convertedMarkdown: convertToMarkdown(f.rawText),
-      finalMarkdown: convertToMarkdown(f.rawText),
-    }));
+    const heuristic: ProcessedFile[] = uploadedFiles.map((f) => {
+      const md = chooseConverter(f);
+      return {
+        name: f.name,
+        rawText: f.rawText,
+        convertedMarkdown: md,
+        finalMarkdown: md,
+      };
+    });
 
     if (linkPool.length > 0) {
       setAppState('linking');
@@ -333,7 +354,7 @@ export default function App() {
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".txt,.md,.text,.markdown"
+              accept=".txt,.md,.text,.markdown,.html,.htm"
               className="hidden"
               onChange={(e) => { if (e.target.files) readAndMerge(e.target.files); e.target.value = ''; }}
             />
@@ -342,7 +363,7 @@ export default function App() {
               {hasFiles ? 'Drop more files' : 'Drop files here'}
             </p>
             {!hasFiles && (
-              <p className="text-xs text-gray-400 mt-0.5">.txt .md .text .markdown</p>
+              <p className="text-xs text-gray-400 mt-0.5">.txt .md .html and more</p>
             )}
           </div>
 
@@ -403,7 +424,11 @@ export default function App() {
                       isActive ? 'bg-indigo-100 text-indigo-800' : 'hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-indigo-500' : 'text-gray-400'}`} />
+                    {isHtmlFile(file.name) || isHtmlContent(file.rawText) ? (
+                      <Code2 className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-orange-500' : 'text-orange-400'}`} />
+                    ) : (
+                      <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-indigo-500' : 'text-gray-400'}`} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{file.name}</p>
                       <p className="text-xs text-gray-400">{fmtBytes(new Blob([file.rawText]).size)}</p>
