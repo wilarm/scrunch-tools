@@ -470,6 +470,9 @@ function App() {
                         <p className="text-blue-700 text-xs">
                           This template includes all standard brand metrics and is ready to use.
                         </p>
+                        <p className="text-blue-600 text-xs mt-1">
+                          ✨ Massive improvements to the v1 default template are coming soon!
+                        </p>
                       </div>
                     </div>
                   </div>
