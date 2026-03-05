@@ -30,8 +30,8 @@ Response format:
 ]`;
 
 // In dev, Vite proxies /api/claude → https://api.anthropic.com/v1/messages (avoids CORS).
-// In prod on Vercel, /axp/api/claude is handled by api/claude.ts serverless function.
-const API_URL = import.meta.env.DEV ? '/api/claude' : '/axp/api/claude';
+// In prod on Vercel, /api/axp-claude is handled by api/axp-claude.ts serverless function.
+const API_URL = import.meta.env.DEV ? '/api/claude' : '/api/axp-claude';
 
 export async function insertLinksWithClaude(
   files: FileInput[],
