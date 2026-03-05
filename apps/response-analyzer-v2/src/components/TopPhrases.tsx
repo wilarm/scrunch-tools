@@ -93,9 +93,18 @@ export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
             onChange={(e) => setNgramSize(Number(e.target.value))}
             className="w-28 accent-teal-600"
           />
-          <span className="text-sm font-medium text-gray-700 w-14">
-            {ngramSize === 1 ? '1 word' : `${ngramSize} words`}
-          </span>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={ngramSize}
+            onChange={(e) => {
+              const v = Math.max(1, Math.min(10, Number(e.target.value)));
+              if (!isNaN(v)) setNgramSize(v);
+            }}
+            className="w-14 px-2 py-1 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
+          <span className="text-sm text-gray-500">{ngramSize === 1 ? 'word' : 'words'}</span>
         </div>
 
         {/* Top N */}
