@@ -1,9 +1,12 @@
 import { useState, useMemo, useCallback, Fragment } from 'react';
-import { ChevronDown, ChevronRight, Eye } from 'lucide-react';
+import { ChevronDown, ChevronRight, Eye, BarChart2, Table, Download } from 'lucide-react';
 import { extractNgrams } from '../utils/textAnalysis';
 import { searchPhrases, aggregateByDimension } from '../utils/phraseSearch';
+import { exportTopPhrasesCSV } from '../utils/exportUtils';
 import { SortableHeader } from './ui/SortableHeader';
 import { useSortableTable } from '../hooks/useSortableTable';
+import { PhraseBarChart } from './PhraseBarChart';
+import { InlineResponsePreview } from './InlineResponsePreview';
 import type { ResponseRow, NgramResult } from '../types';
 
 interface TopPhrasesProps {
@@ -12,10 +15,15 @@ interface TopPhrasesProps {
 }
 
 type NgramSortKey = 'phrase' | 'count' | 'responseCount' | 'responsePercent';
+type ViewMode = 'table' | 'chart';
+
+const CHART_TOP_N_OPTIONS = [5, 10, 15, 20];
 
 export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
-  const [ngramSize, setNgramSize] = useState<2 | 3>(2);
+  const [ngramSize, setNgramSize] = useState(2);
   const [topN, setTopN] = useState(25);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [chartTopN, setChartTopN] = useState(10);
   const [expandedPhrase, setExpandedPhrase] = useState<string | null>(null);
   const [pivotDimension, setPivotDimension] = useState<string>('');
 
@@ -61,34 +69,36 @@ export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
     onViewResponses?.(phrase, subset, groupValue);
   }, [data, onViewResponses]);
 
+  const handleBarClick = useCallback((phrase: string) => {
+    setExpandedPhrase(prev => prev === phrase ? null : phrase);
+    setViewMode('table');
+  }, []);
+
   if (data.length === 0) {
     return <p className="text-sm text-gray-500 text-center py-8">No data to analyze. Adjust your filters or upload a CSV.</p>;
   }
 
   return (
     <div>
+      {/* Controls */}
       <div className="flex items-center gap-4 mb-4 flex-wrap">
+        {/* N-gram slider */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Phrase length:</span>
-          <div className="flex rounded-lg border border-gray-300 overflow-hidden">
-            <button
-              onClick={() => setNgramSize(2)}
-              className={`px-3 py-1 text-sm font-medium ${
-                ngramSize === 2 ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              2-word
-            </button>
-            <button
-              onClick={() => setNgramSize(3)}
-              className={`px-3 py-1 text-sm font-medium border-l border-gray-300 ${
-                ngramSize === 3 ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              3-word
-            </button>
-          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={ngramSize}
+            onChange={(e) => setNgramSize(Number(e.target.value))}
+            className="w-28 accent-teal-600"
+          />
+          <span className="text-sm font-medium text-gray-700 w-14">
+            {ngramSize === 1 ? '1 word' : `${ngramSize} words`}
+          </span>
         </div>
+
+        {/* Top N */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Show top:</span>
           <select
@@ -101,10 +111,65 @@ export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
             ))}
           </select>
         </div>
+
+        {/* View toggle */}
+        <div className="flex rounded-lg border border-gray-300 overflow-hidden ml-auto">
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-3 py-1 flex items-center gap-1.5 text-sm font-medium ${
+              viewMode === 'table' ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+            title="Table view"
+          >
+            <Table className="w-3.5 h-3.5" />
+            Table
+          </button>
+          <button
+            onClick={() => setViewMode('chart')}
+            className={`px-3 py-1 flex items-center gap-1.5 text-sm font-medium border-l border-gray-300 ${
+              viewMode === 'chart' ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+            title="Chart view"
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            Chart
+          </button>
+        </div>
+
+        {/* Export */}
+        <button
+          onClick={() => exportTopPhrasesCSV(sortedData, ngramSize)}
+          className="flex items-center gap-1.5 px-3 py-1 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+          title="Export as CSV"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Export CSV
+        </button>
       </div>
 
       {ngrams.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-8">No phrases found. Try adjusting the phrase length.</p>
+      ) : viewMode === 'chart' ? (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-sm text-gray-600">Chart shows top:</span>
+            <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+              {CHART_TOP_N_OPTIONS.map((n, idx) => (
+                <button
+                  key={n}
+                  onClick={() => setChartTopN(n)}
+                  className={`px-3 py-1 text-sm font-medium ${idx > 0 ? 'border-l border-gray-300' : ''} ${
+                    chartTopN === n ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-gray-400 ml-2">Click a bar to expand in table view</span>
+          </div>
+          <PhraseBarChart data={sortedData} topN={chartTopN} onBarClick={handleBarClick} />
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -183,6 +248,17 @@ export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
                   {expandedPhrase === ngram.phrase && (
                     <tr>
                       <td colSpan={6} className="bg-gray-50 px-6 py-3">
+                        {/* Eye icon + view all */}
+                        {onViewResponses && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onViewResponses(ngram.phrase); }}
+                            className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-medium mb-3"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View all {ngram.responseCount} matching responses
+                          </button>
+                        )}
+
                         {/* Pivot selector */}
                         {availableDimensions.length > 0 && (
                           <div className="flex items-center gap-2 mb-3">
@@ -276,6 +352,16 @@ export function TopPhrases({ data, onViewResponses }: TopPhrasesProps) {
                               </tbody>
                             </table>
                           </div>
+                        )}
+
+                        {/* Inline response preview */}
+                        {!pivotDimension && (
+                          <InlineResponsePreview
+                            phrase={ngram.phrase}
+                            responses={data}
+                            maxPreviews={3}
+                            onViewAll={onViewResponses ? () => onViewResponses(ngram.phrase) : undefined}
+                          />
                         )}
                       </td>
                     </tr>

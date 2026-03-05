@@ -58,7 +58,8 @@ export function extractNgrams(
 export function extractWordFrequencies(
   data: ResponseRow[],
   minFrequency: number = 3,
-  maxWords: number = 150
+  maxWords: number = 150,
+  excludeWords: Set<string> = new Set()
 ): WordFrequency[] {
   const wordMap = new Map<string, number>();
 
@@ -66,6 +67,7 @@ export function extractWordFrequencies(
     const words = tokenize(row.response_text || '');
     const seen = new Set<string>();
     for (const word of words) {
+      if (excludeWords.has(word.toLowerCase())) continue;
       if (!seen.has(word)) {
         seen.add(word);
         wordMap.set(word, (wordMap.get(word) || 0) + 1);
@@ -75,6 +77,37 @@ export function extractWordFrequencies(
 
   const results: WordFrequency[] = [];
   for (const [text, value] of wordMap) {
+    if (value >= minFrequency) {
+      results.push({ text, value });
+    }
+  }
+
+  results.sort((a, b) => b.value - a.value);
+  return results.slice(0, maxWords);
+}
+
+export function extractBigramFrequencies(
+  data: ResponseRow[],
+  minFrequency: number = 3,
+  maxWords: number = 150,
+  excludeWords: Set<string> = new Set()
+): WordFrequency[] {
+  const bigramMap = new Map<string, number>();
+
+  for (const row of data) {
+    const words = tokenize(row.response_text || '').filter(w => !excludeWords.has(w.toLowerCase()));
+    const seen = new Set<string>();
+    for (let i = 0; i < words.length - 1; i++) {
+      const bigram = `${words[i]} ${words[i + 1]}`;
+      if (!seen.has(bigram)) {
+        seen.add(bigram);
+        bigramMap.set(bigram, (bigramMap.get(bigram) || 0) + 1);
+      }
+    }
+  }
+
+  const results: WordFrequency[] = [];
+  for (const [text, value] of bigramMap) {
     if (value >= minFrequency) {
       results.push({ text, value });
     }
