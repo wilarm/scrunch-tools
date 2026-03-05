@@ -38,6 +38,8 @@ function App() {
   const [fetchAll, setFetchAll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [progressLoaded, setProgressLoaded] = useState(0);
+  const [progressTotal, setProgressTotal] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showApiCall, setShowApiCall] = useState(false);
@@ -84,7 +86,8 @@ function App() {
     params.append('limit', String(DEFAULT_LIMIT));
     params.append('offset', '0');
 
-    if (selectedFields.length > 0) {
+    // Only include fields for query endpoint (responses returns all fields)
+    if (activeTab === 'query' && selectedFields.length > 0) {
       params.append('fields', selectedFields.join(','));
     }
 
@@ -92,6 +95,12 @@ function App() {
     filterStages.forEach(s => params.append('stage', s));
 
     return `${baseUrl}?${params.toString()}`;
+  };
+
+  const generateCurlCommand = () => {
+    const url = generateApiCallUrl();
+    if (!url) return '';
+    return `curl -H "Authorization: Bearer ${apiKey}" "${url}"`;
   };
 
   const handleShowApiCall = () => {
@@ -161,6 +170,8 @@ function App() {
 
   const performExport = async () => {
     setProgress(0);
+    setProgressLoaded(0);
+    setProgressTotal(0);
     setLoading(true);
 
     try {
@@ -175,7 +186,9 @@ function App() {
         filterPlatforms,
         filterStages,
         onProgress: (loaded, total) => {
-          setProgress(Math.round((loaded / total) * 100));
+          setProgressLoaded(loaded);
+          setProgressTotal(total);
+          setProgress(total > 0 ? Math.min(Math.round((loaded / total) * 100), 100) : 0);
         },
       });
 
@@ -552,7 +565,14 @@ function App() {
               {loading && (
                 <div className="border-t pt-6">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-700">Exporting...</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      Exporting...
+                      {progressTotal > 0 && (
+                        <span className="text-gray-500 ml-2">
+                          {progressLoaded.toLocaleString()} / {progressTotal.toLocaleString()} rows
+                        </span>
+                      )}
+                    </p>
                     <span className="text-sm font-semibold text-blue-600">{progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -588,18 +608,18 @@ function App() {
               {showApiCall && apiCallUrl && (
                 <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
                   <div className="text-gray-700 mb-3 font-semibold">API Call (first page):</div>
-                  <p className="text-xs text-gray-600 mb-3">Pagination is handled automatically for "All results" mode. Add Authorization header with your API key.</p>
+                  <p className="text-xs text-gray-600 mb-3">Pagination is handled automatically for "All results" mode. Increment <code className="font-mono bg-black/10 px-1 py-0.5 rounded">offset</code> by <code className="font-mono bg-black/10 px-1 py-0.5 rounded">limit</code> to fetch subsequent pages.</p>
                   <div className="bg-white p-3 rounded border border-gray-200 mb-3 break-all font-mono text-xs text-gray-900">
-                    {apiCallUrl}
+                    {generateCurlCommand()}
                   </div>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`curl -H "Authorization: Bearer YOUR_API_KEY" "${apiCallUrl}"`);
+                      navigator.clipboard.writeText(generateCurlCommand());
                       alert('curl command copied to clipboard');
                     }}
                     className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
                   >
-                    Copy as curl
+                    Copy curl
                   </button>
                 </div>
               )}

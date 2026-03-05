@@ -88,83 +88,131 @@ export function validateQueryFields(fields: string[]): { valid: boolean; error?:
   return { valid: true };
 }
 
+async function fetchPageWithRetry(
+  proxyUrl: string,
+  body: Record<string, unknown>,
+  maxRetries = 2,
+): Promise<{ items: Record<string, unknown>[]; total?: number }> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const msg = errorData.error || `Export failed with status ${response.status}`;
+        // Don't retry 4xx errors (client errors like auth failures)
+        if (response.status >= 400 && response.status < 500) {
+          throw new Error(msg);
+        }
+        lastError = new Error(msg);
+        continue;
+      }
+
+      const json = await response.json();
+      const items = extractRows(json as AnyApiResponse);
+      const total = (json && typeof json === 'object' && typeof json.total === 'number')
+        ? json.total as number
+        : undefined;
+
+      return { items, total };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        lastError = new Error('Request timeout - try reducing date range or fields');
+        // Retry timeouts
+        continue;
+      }
+      if (error instanceof Error) {
+        lastError = error;
+        // Don't retry client errors that were already thrown
+        if (error.message.startsWith('Export failed with status 4')) {
+          throw error;
+        }
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('Request failed after retries');
+}
+
 export async function fetchAndFlattenData(params: ExportParams): Promise<Record<string, unknown>[]> {
   const { apiKey, brandId, startDate, endDate, fetchAll = false, endpoint = 'responses', fields = [], filterPlatforms = [], filterStages = [], onProgress } = params;
 
-  // Use Supabase Edge Function
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
 
   const allItems: Record<string, unknown>[] = [];
   let offset = 0;
-  // Use smaller page size per request to avoid edge function timeouts
-  // The edge function now handles single pages, frontend handles pagination
-  const pageSize = endpoint === 'responses' ? 100 : 1000;
+  const pageSize = 1000;
+  let knownTotal: number | undefined;
 
   try {
-    onProgress?.(0, MAX_ROWS);
+    onProgress?.(0, 0);
 
     while (true) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const { items, total } = await fetchPageWithRetry(proxyUrl, {
+        apiKey,
+        brandId,
+        startDate,
+        endDate,
+        endpoint,
+        fields,
+        fetchAll,
+        filterPlatforms,
+        filterStages,
+        limit: pageSize,
+        offset,
+      });
 
-      try {
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            apiKey,
-            brandId,
-            startDate,
-            endDate,
-            endpoint,
-            fields,
-            fetchAll,
-            filterPlatforms,
-            filterStages,
-            limit: pageSize,
-            offset,
-          }),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || `Export failed with status ${response.status}`);
-        }
-
-        const json: AnyApiResponse = await response.json();
-        const items = extractRows(json);
-
-        if (items.length === 0) {
-          console.warn('API returned 0 rows. Raw response:', json);
-          break;
-        }
-
-        allItems.push(...items);
-        onProgress?.(allItems.length, MAX_ROWS);
-
-        if (allItems.length >= MAX_ROWS) {
-          throw new Error(`Exceeded maximum of ${MAX_ROWS} rows. Please reduce your date range or select fewer fields.`);
-        }
-
-        if (!fetchAll || items.length < pageSize) {
-          break;
-        }
-
-        offset += pageSize;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout - try reducing date range or fields');
-        }
-        throw error;
+      // Use the API's total count for accurate progress (captured on first page)
+      if (total !== undefined && knownTotal === undefined) {
+        knownTotal = total;
       }
+
+      if (items.length === 0) {
+        break;
+      }
+
+      allItems.push(...items);
+
+      const progressTotal = knownTotal ?? MAX_ROWS;
+      onProgress?.(allItems.length, progressTotal);
+
+      if (allItems.length >= MAX_ROWS) {
+        throw new Error(`Exceeded maximum of ${MAX_ROWS} rows. Please reduce your date range or select fewer fields.`);
+      }
+
+      // Stop after first page unless fetchAll is set
+      if (!fetchAll) {
+        break;
+      }
+
+      // Stop if we've fetched everything (using API total or short page)
+      if (knownTotal !== undefined && allItems.length >= knownTotal) {
+        break;
+      }
+      if (items.length < pageSize) {
+        break;
+      }
+
+      offset += pageSize;
     }
 
+    // Final progress update
+    onProgress?.(allItems.length, allItems.length);
     return allItems;
   } catch (error) {
     if (error instanceof Error) {

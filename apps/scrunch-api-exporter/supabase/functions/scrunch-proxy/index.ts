@@ -239,7 +239,12 @@ Deno.serve(async (req: Request) => {
 
       const items = extractItems(data);
 
-      return new Response(JSON.stringify({ items, total: items.length }), {
+      // Pass through the API's total count for accurate progress tracking
+      const apiTotal = (typeof data === 'object' && data !== null && 'total' in data && typeof data.total === 'number')
+        ? data.total
+        : items.length;
+
+      return new Response(JSON.stringify({ items, total: apiTotal }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -298,7 +303,12 @@ Deno.serve(async (req: Request) => {
       const items = extractItems(data);
       const flattenedItems = items.map(item => flattenResponse(item as Response));
 
-      return new Response(JSON.stringify({ items: flattenedItems, total: flattenedItems.length }), {
+      // Pass through the API's total count for accurate progress tracking
+      const apiTotal = (typeof data === 'object' && data !== null && 'total' in data && typeof data.total === 'number')
+        ? data.total
+        : flattenedItems.length;
+
+      return new Response(JSON.stringify({ items: flattenedItems, total: apiTotal }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
