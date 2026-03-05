@@ -237,21 +237,12 @@
 
     <script>
       (function () {
-        const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-        const LS_KEY = 'scrunch_feedback_ts';
-
         const prompts = {
           idea: 'What tool or feature would you find useful?',
           improve: 'What would make these tools work better for you?',
         };
 
         let feedbackType = '';
-
-        // Check cooldown on load
-        const lastSubmit = parseInt(localStorage.getItem(LS_KEY) || '0', 10);
-        if (Date.now() - lastSubmit < COOLDOWN_MS) {
-          showSettled();
-        }
 
         function showSettled() {
           hide('fb-prompt');
@@ -331,8 +322,6 @@
           } catch (err) {
             console.warn('Feedback submission failed:', err);
           }
-
-          localStorage.setItem(LS_KEY, String(Date.now()));
 
           hide('fb-form');
           setTimeout(() => { show('fb-thanks'); }, 320);
