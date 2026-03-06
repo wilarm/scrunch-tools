@@ -13,6 +13,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   prompt_id: ['prompt_id', 'id', 'promptid'],
   branded: ['branded'],
   persona_name: ['persona_name', 'persona'],
+  tags: ['tags', 'tag', 'labels', 'categories'],
 };
 
 export function parseCSV(rawText: string): ParseResult {

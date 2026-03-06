@@ -22,13 +22,14 @@ function App() {
     stages: [],
     countries: [],
     promptIds: [],
+    tags: [],
   });
   const [searchPhrase, setSearchPhrase] = useState('');
 
   const hasData = data.length > 0;
 
   const availableFilters = useMemo(() => {
-    if (!hasData) return { platforms: [], stages: [], countries: [], prompts: [] as { key: string; label: string }[] };
+    if (!hasData) return { platforms: [], stages: [], countries: [], prompts: [] as { key: string; label: string }[], tags: [] };
     const platforms = [...new Set(data.map(r => r.platform).filter(Boolean))].sort();
     const stages = [...new Set(data.map(r => r.stage).filter(Boolean))].sort();
     const countries = [...new Set(data.map(r => r.country).filter(Boolean))].sort();
@@ -42,7 +43,13 @@ function App() {
     const prompts = [...promptMap.entries()]
       .map(([key, label]) => ({ key, label }))
       .sort((a, b) => a.label.localeCompare(b.label));
-    return { platforms, stages, countries, prompts };
+    // Tags: split comma-separated values and collect unique non-empty tags
+    const tagSet = new Set<string>();
+    data.forEach(r => {
+      if (r.tags) r.tags.split(',').forEach(t => { const trimmed = t.trim(); if (trimmed) tagSet.add(trimmed); });
+    });
+    const tags = [...tagSet].sort();
+    return { platforms, stages, countries, prompts, tags };
   }, [data, hasData]);
 
   const filteredData = useMemo(() => {
@@ -54,6 +61,10 @@ function App() {
       if (filters.promptIds.length > 0) {
         const rowPromptKey = row.prompt_id || row.prompt;
         if (!filters.promptIds.includes(rowPromptKey)) return false;
+      }
+      if (filters.tags.length > 0) {
+        const rowTags = row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+        if (!filters.tags.some(t => rowTags.includes(t))) return false;
       }
       return true;
     });
@@ -81,7 +92,7 @@ function App() {
   const handleClear = useCallback(() => {
     setData([]);
     setParseResult(null);
-    setFilters({ platforms: [], stages: [], countries: [], promptIds: [] });
+    setFilters({ platforms: [], stages: [], countries: [], promptIds: [], tags: [] });
     setActiveTab('phrases');
     setSearchPhrase('');
   }, []);

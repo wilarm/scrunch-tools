@@ -15,6 +15,7 @@ interface FilterBarProps {
     stages: string[];
     countries: string[];
     prompts: PromptOption[];
+    tags: string[];
   };
 }
 
@@ -196,7 +197,8 @@ export function FilterBar({ filters, onFiltersChange, available }: FilterBarProp
     available.platforms.length > 0 ||
     available.stages.length > 0 ||
     available.countries.length > 0 ||
-    available.prompts.length > 0;
+    available.prompts.length > 0 ||
+    available.tags.length > 0;
 
   if (!hasAnyFilters) return null;
 
@@ -229,6 +231,12 @@ export function FilterBar({ filters, onFiltersChange, available }: FilterBarProp
           options={available.prompts}
           selected={filters.promptIds}
           onChange={(promptIds) => onFiltersChange({ ...filters, promptIds })}
+        />
+        <MultiSelect
+          label="Tag"
+          options={available.tags}
+          selected={filters.tags}
+          onChange={(tags) => onFiltersChange({ ...filters, tags })}
         />
       </div>
     </div>

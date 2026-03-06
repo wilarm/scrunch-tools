@@ -10,6 +10,7 @@ export interface ResponseRow {
   brand_present: string;
   brand_position: string;
   brand_sentiment: string;
+  tags: string; // comma-separated
   [key: string]: string;
 }
 
@@ -28,6 +29,7 @@ export interface FilterState {
   stages: string[];
   countries: string[];
   promptIds: string[];
+  tags: string[];
 }
 
 export interface NgramResult {
