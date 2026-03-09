@@ -200,10 +200,7 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
         break;
       }
 
-      // Stop if we've fetched everything (using API total or short page)
-      if (knownTotal !== undefined && allItems.length >= knownTotal) {
-        break;
-      }
+      // Stop if we've reached the last page (short page = no more data)
       if (items.length < pageSize) {
         break;
       }
