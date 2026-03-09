@@ -5,7 +5,7 @@ export interface Brand {
 }
 
 export const DEFAULT_LIMIT = 1000;
-const MAX_ROWS = 200000;
+export const MAX_ROWS = 200000;
 
 const QUERY_METRICS = [
   'responses',
@@ -149,7 +149,12 @@ async function fetchPageWithRetry(
   throw lastError || new Error('Request failed after retries');
 }
 
-export async function fetchAndFlattenData(params: ExportParams): Promise<Record<string, unknown>[]> {
+export interface FetchResult {
+  data: Record<string, unknown>[];
+  capped?: boolean;
+}
+
+export async function fetchAndFlattenData(params: ExportParams): Promise<FetchResult> {
   const { apiKey, brandId, startDate, endDate, fetchAll = false, endpoint = 'responses', fields = [], filterPlatforms = [], filterStages = [], onProgress } = params;
 
   const proxyUrl = 'https://qnbxemqvfzzgkxchtbhb.supabase.co/functions/v1/scrunch-proxy';
@@ -193,7 +198,8 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
       onProgress?.(allItems.length, progressTotal);
 
       if (allItems.length >= MAX_ROWS) {
-        throw new Error(`Exceeded maximum of ${MAX_ROWS} rows. Please reduce your date range or select fewer fields.`);
+        onProgress?.(allItems.length, allItems.length);
+        return { data: allItems, capped: true };
       }
 
       // Stop after first page unless fetchAll is set
@@ -211,7 +217,7 @@ export async function fetchAndFlattenData(params: ExportParams): Promise<Record<
 
     // Final progress update
     onProgress?.(allItems.length, allItems.length);
-    return allItems;
+    return { data: allItems };
   } catch (error) {
     if (error instanceof Error) {
       throw error;

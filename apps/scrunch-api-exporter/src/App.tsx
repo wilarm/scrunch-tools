@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Download, Loader2, AlertCircle, FileDown, Filter } from 'lucide-react';
-import { fetchAndFlattenData, generateCSV, validateQueryFields, fetchBrands, DEFAULT_LIMIT } from './utils/api';
+import { fetchAndFlattenData, generateCSV, validateQueryFields, fetchBrands, DEFAULT_LIMIT, MAX_ROWS } from './utils/api';
 import type { Brand } from './utils/api';
 import {
   FieldSelector,
@@ -171,7 +171,7 @@ function App() {
     setLoading(true);
 
     try {
-      const data = await fetchAndFlattenData({
+      const { data, capped } = await fetchAndFlattenData({
         apiKey,
         brandId,
         startDate,
@@ -209,7 +209,11 @@ function App() {
       link.click();
       document.body.removeChild(link);
 
-      setSuccess(`Successfully exported ${data.length} records`);
+      if (capped) {
+        setSuccess(`Exported ${data.length.toLocaleString()} records (capped at ${MAX_ROWS.toLocaleString()} rows — narrow your date range to export more).`);
+      } else {
+        setSuccess(`Successfully exported ${data.length.toLocaleString()} records`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
