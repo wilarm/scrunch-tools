@@ -194,8 +194,13 @@ function App() {
                 <ParetoChart paretoEnvelope={selectedResult.paretoEnvelope} selectedPoint={selectedResult.selectedPoint} />
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <TrajectoryChart trajectories={selectedResult.trajectories} selectedBudget={selectedResult.selectedBudget} selectedStrategy={selectedResult.selectedStrategy} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <TrajectoryChart trajectories={selectedResult.trajectories} selectedBudget={selectedResult.selectedBudget} selectedStrategy={selectedResult.selectedStrategy} metric="coverage" />
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-5">
+                <TrajectoryChart trajectories={selectedResult.trajectories} selectedBudget={selectedResult.selectedBudget} selectedStrategy={selectedResult.selectedStrategy} metric="resilience" />
+              </div>
             </div>
           </div>
         )}
