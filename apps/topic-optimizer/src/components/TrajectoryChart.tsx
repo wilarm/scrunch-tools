@@ -62,8 +62,20 @@ export function TrajectoryChart({ trajectories, selectedBudget, selectedStrategy
           <XAxis dataKey="budget" reversed tick={{ fontSize: 11 }} label={{ value: 'Budget (prompts kept)', position: 'bottom', offset: 2 }} />
           <YAxis domain={[0, 1]} tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(value: number, name: string) => [`${(value * 100).toFixed(2)}%`, name]}
-            labelFormatter={(budget: number) => `${budget} prompts kept`}
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null;
+              return (
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-2.5 py-1.5 text-xs">
+                  <div className="font-medium text-gray-700 mb-0.5">{label} prompts kept</div>
+                  {payload.map((p, i) => (
+                    <div key={i} style={{ color: p.color }} className="flex justify-between gap-3">
+                      <span>{p.name}</span>
+                      <span className="font-mono">{((p.value as number) * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            }}
           />
           <Legend wrapperStyle={{ fontSize: 10 }} iconType="line" verticalAlign="top" />
           {trajectories.map((t, i) => {

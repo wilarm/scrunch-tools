@@ -70,6 +70,51 @@ export function findBestPointForConstraint(
   }
 }
 
+export function findPointForStrategy(
+  trajectories: EliminationTrajectory[],
+  strategyName: string,
+  constraint: Constraint,
+  baselineCoverage: number,
+  baselineResilience: number,
+): ParetoPoint | null {
+  const traj = trajectories.find(t => t.strategyName === strategyName);
+  if (!traj) return null;
+
+  // Sort points from lowest budget to highest
+  const sorted = [...traj.points].sort((a, b) => a.budget - b.budget);
+
+  switch (constraint.axis) {
+    case 'coverage-floor': {
+      const threshold = constraint.value * baselineCoverage;
+      for (const pt of sorted) {
+        if (pt.coverageFrac >= threshold) {
+          return { budget: pt.budget, coverageFrac: pt.coverageFrac, resilienceFrac: pt.resilienceFrac, strategyName };
+        }
+      }
+      return null;
+    }
+    case 'resilience-floor': {
+      const threshold = constraint.value * baselineResilience;
+      for (const pt of sorted) {
+        if (pt.resilienceFrac >= threshold) {
+          return { budget: pt.budget, coverageFrac: pt.coverageFrac, resilienceFrac: pt.resilienceFrac, strategyName };
+        }
+      }
+      return null;
+    }
+    case 'budget': {
+      const target = Math.round(constraint.value);
+      let best: ParetoPoint | null = null;
+      for (const pt of sorted) {
+        if (pt.budget <= target) {
+          best = { budget: pt.budget, coverageFrac: pt.coverageFrac, resilienceFrac: pt.resilienceFrac, strategyName };
+        }
+      }
+      return best;
+    }
+  }
+}
+
 export function replayTrajectoryCuts(
   trajectories: EliminationTrajectory[],
   strategyName: string,

@@ -113,14 +113,14 @@ export function ManifestTable({ manifest }: ManifestTableProps) {
                 <td className="px-3 py-2 text-gray-600 font-mono text-xs">{row.promptId}</td>
                 <td className="px-3 py-2 text-gray-900 max-w-md truncate">{row.promptText}</td>
                 <td className="px-3 py-2 text-right text-gray-600">{row.nUrls}</td>
-                <td className="px-3 py-2 text-xs max-w-sm">
+                <td className="px-3 py-2 text-xs min-w-[280px]">
                   {row.status === 'CUT' && row.coveringPrompts.length > 0 ? (
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {row.coveringPrompts.map((cp, j) => (
-                        <div key={j} className="text-gray-500" title={cp.promptText}>
+                        <div key={j} className="text-gray-500">
                           <span className="text-violet-600 font-medium">{cp.sharedUrls} URL{cp.sharedUrls !== 1 ? 's' : ''}</span>
                           {' '}from <span className="font-mono">{cp.promptId}</span>
-                          <span className="text-gray-400 ml-1 truncate inline-block max-w-[200px] align-bottom">{cp.promptText}</span>
+                          <div className="text-gray-400 mt-0.5 leading-snug">{cp.promptText.length > 1000 ? cp.promptText.slice(0, 1000) + '...' : cp.promptText}</div>
                         </div>
                       ))}
                       {row.uncoveredUrls > 0 && (

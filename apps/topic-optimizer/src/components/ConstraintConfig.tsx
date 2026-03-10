@@ -1,12 +1,16 @@
 import { ConstraintAxis } from '../engine/types';
 import { CONSTRAINT_DEFAULTS } from '../types';
 import { Play } from 'lucide-react';
+import { strategyLabel, strategyDescription } from '../utils/strategyLabels';
+import { DEFAULT_STRATEGIES } from '../engine/strategies';
 
 interface ConstraintConfigProps {
   axis: ConstraintAxis;
   value: number;
+  strategyOverride: string;
   onAxisChange: (axis: ConstraintAxis) => void;
   onValueChange: (value: number) => void;
+  onStrategyChange: (strategy: string) => void;
   onRun: () => void;
   running: boolean;
   nTopics: number;
@@ -21,7 +25,7 @@ const AXES: { key: ConstraintAxis; label: string; description: string; unit: str
 ];
 
 export function ConstraintConfig({
-  axis, value, onAxisChange, onValueChange, onRun, running,
+  axis, value, strategyOverride, onAxisChange, onValueChange, onStrategyChange, onRun, running,
   nTopics, nPrompts, nUrls,
 }: ConstraintConfigProps) {
   const currentAxis = AXES.find(a => a.key === axis)!;
@@ -85,6 +89,29 @@ export function ConstraintConfig({
             className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
           />
           <span className="text-sm text-gray-500">{currentAxis.unit}</span>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Pruning Strategy</label>
+        <div className="space-y-2">
+          {DEFAULT_STRATEGIES.map(s => (
+            <label key={s.name} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+              strategyOverride === s.name ? 'border-violet-400 bg-violet-50' : 'border-gray-200 hover:border-gray-300'
+            }`}>
+              <input
+                type="radio"
+                name="strategy"
+                checked={strategyOverride === s.name}
+                onChange={() => onStrategyChange(s.name)}
+                className="mt-0.5 text-violet-600 focus:ring-violet-500"
+              />
+              <div>
+                <div className="font-medium text-sm text-gray-900">{strategyLabel(s.name)}</div>
+                <div className="text-xs text-gray-500">{strategyDescription(s.name)}</div>
+              </div>
+            </label>
+          ))}
         </div>
       </div>
 

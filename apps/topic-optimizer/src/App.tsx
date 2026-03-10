@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { FileUpload } from './components/FileUpload';
 import { ConstraintConfig } from './components/ConstraintConfig';
 import { ResultsSummary } from './components/ResultsSummary';
@@ -9,8 +9,9 @@ import { TrajectoryChart } from './components/TrajectoryChart';
 import { TopicSelector } from './components/TopicSelector';
 import { parseCSV, ParseResult } from './utils/csvParser';
 import { exportManifestCSV, downloadCSV } from './utils/exportUtils';
-import { runPipeline, TopicGroup } from './engine/pipeline';
-import { ConstraintAxis, TopicResult } from './engine/types';
+import { runAnalysis, applySelection, TopicGroup } from './engine/pipeline';
+import { ConstraintAxis, TopicAnalysis, TopicResult } from './engine/types';
+import { DEFAULT_STRATEGIES } from './engine/strategies';
 import { CONSTRAINT_DEFAULTS } from './types';
 import { Download, RotateCcw, Info } from 'lucide-react';
 import { strategyLabel } from './utils/strategyLabels';
@@ -19,12 +20,16 @@ function App() {
   const [step, setStep] = useState<'upload' | 'configure' | 'results'>('upload');
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [groups, setGroups] = useState<TopicGroup[]>([]);
-  const [constraintAxis, setConstraintAxis] = useState<ConstraintAxis>('resilience-floor');
-  const [constraintValue, setConstraintValue] = useState(CONSTRAINT_DEFAULTS['resilience-floor']);
+  const [constraintAxis, setConstraintAxis] = useState<ConstraintAxis>('coverage-floor');
+  const [constraintValue, setConstraintValue] = useState(CONSTRAINT_DEFAULTS['coverage-floor']);
+  const [strategyOverride, setStrategyOverride] = useState<string>('weighted_50_50');
+  const [analyses, setAnalyses] = useState<TopicAnalysis[]>([]);
   const [results, setResults] = useState<TopicResult[]>([]);
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(0);
   const [running, setRunning] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+
+  const constraint = useMemo(() => ({ axis: constraintAxis, value: constraintValue }), [constraintAxis, constraintValue]);
 
   const handleCSVLoaded = useCallback((rawText: string) => {
     const result = parseCSV(rawText);
@@ -40,34 +45,43 @@ function App() {
 
   const handleRun = useCallback(() => {
     setRunning(true);
-    // Use setTimeout to allow UI to update before heavy computation
     setTimeout(() => {
-      const output = runPipeline(groups, { axis: constraintAxis, value: constraintValue });
-      setResults(output);
+      const newAnalyses = runAnalysis(groups);
+      const newResults = applySelection(newAnalyses, constraint, strategyOverride);
+      setAnalyses(newAnalyses);
+      setResults(newResults);
       setSelectedTopicIdx(0);
       setStep('results');
       setRunning(false);
     }, 50);
-  }, [groups, constraintAxis, constraintValue]);
+  }, [groups, constraint, strategyOverride]);
+
+  // Instant re-selection when strategy changes on results page
+  const handleStrategyChangeOnResults = useCallback((newStrategy: string) => {
+    setStrategyOverride(newStrategy);
+    const newResults = applySelection(analyses, constraint, newStrategy);
+    setResults(newResults);
+  }, [analyses, constraint]);
 
   const handleExport = useCallback(() => {
-    const csv = exportManifestCSV(results);
+    const csv = exportManifestCSV(results, { constraint, strategy: strategyOverride });
     downloadCSV(csv, 'topic_optimizer_manifest.csv');
-  }, [results]);
+  }, [results, constraint, strategyOverride]);
 
   const handleReset = useCallback(() => {
     setStep('upload');
     setParseResult(null);
     setGroups([]);
+    setAnalyses([]);
     setResults([]);
     setParseErrors([]);
+    setStrategyOverride('weighted_50_50');
   }, []);
 
   const selectedResult = results[selectedTopicIdx];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -85,7 +99,6 @@ function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {/* Upload step */}
         {step === 'upload' && (
           <div className="max-w-xl mx-auto">
             <div className="mb-6 text-center">
@@ -105,15 +118,16 @@ function App() {
           </div>
         )}
 
-        {/* Configure step */}
         {step === 'configure' && parseResult && (
           <div className="max-w-md mx-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Configure Pruning</h2>
             <ConstraintConfig
               axis={constraintAxis}
               value={constraintValue}
+              strategyOverride={strategyOverride}
               onAxisChange={setConstraintAxis}
               onValueChange={setConstraintValue}
+              onStrategyChange={setStrategyOverride}
               onRun={handleRun}
               running={running}
               nTopics={parseResult.nTopics}
@@ -123,10 +137,8 @@ function App() {
           </div>
         )}
 
-        {/* Results step */}
         {step === 'results' && selectedResult && (
           <div className="space-y-6">
-            {/* Header row */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-bold text-gray-900">Results</h2>
@@ -153,45 +165,57 @@ function App() {
               </div>
             </div>
 
-            {/* Summary cards */}
             {results.length > 1 && (
               <ResultsSummary results={results} onSelectTopic={setSelectedTopicIdx} />
             )}
 
-            {/* Selected topic detail */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{selectedResult.topicName}</h3>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                <span>{selectedResult.nPrompts} prompts</span>
-                <span>{selectedResult.nUrls} URLs</span>
-                <span>Budget: {selectedResult.selectedBudget}</span>
-                <span>Strategy: {strategyLabel(selectedResult.selectedStrategy)}</span>
-                <span className="group relative">
-                  Coverage: {(selectedResult.selectedCoverage * 100).toFixed(1)}%
-                  <Info className="w-3 h-3 inline ml-0.5 text-gray-400" />
-                  <span className="hidden group-hover:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
-                    % of unique URLs cited by at least one prompt
-                  </span>
-                </span>
-                <span className="group relative">
-                  Resilience: {(selectedResult.selectedResilience * 100).toFixed(1)}%
-                  <Info className="w-3 h-3 inline ml-0.5 text-gray-400" />
-                  <span className="hidden group-hover:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
-                    % of unique URLs cited by 2+ prompts (backup coverage)
-                  </span>
-                </span>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{selectedResult.topicName}</h3>
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <span>{selectedResult.nPrompts} prompts</span>
+                    <span>{selectedResult.nUrls} URLs</span>
+                    <span>Budget: {selectedResult.selectedBudget}</span>
+                    <span className="group relative">
+                      Coverage: {(selectedResult.selectedCoverage * 100).toFixed(1)}%
+                      <Info className="w-3 h-3 inline ml-0.5 text-gray-400" />
+                      <span className="hidden group-hover:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                        % of unique URLs cited by at least one prompt
+                      </span>
+                    </span>
+                    <span className="group relative">
+                      Resilience: {(selectedResult.selectedResilience * 100).toFixed(1)}%
+                      <Info className="w-3 h-3 inline ml-0.5 text-gray-400" />
+                      <span className="hidden group-hover:block absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                        % of unique URLs cited by 2+ prompts (backup coverage)
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <label className="text-xs text-gray-500">Strategy:</label>
+                  <select
+                    value={strategyOverride}
+                    onChange={(e) => handleStrategyChangeOnResults(e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  >
+                    {DEFAULT_STRATEGIES.map(s => (
+                      <option key={s.name} value={s.name}>{strategyLabel(s.name)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <ManifestTable manifest={selectedResult.manifest} />
             </div>
 
-            {/* Charts */}
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <FlatnessChart curve={selectedResult.greedyCurve} totalUrls={selectedResult.nUrls} />
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <ParetoChart paretoEnvelope={selectedResult.paretoEnvelope} selectedPoint={selectedResult.selectedPoint} />
+                <ParetoChart trajectories={selectedResult.trajectories} selectedBudget={selectedResult.selectedBudget} selectedStrategy={selectedResult.selectedStrategy} nPrompts={selectedResult.nPrompts} />
               </div>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">

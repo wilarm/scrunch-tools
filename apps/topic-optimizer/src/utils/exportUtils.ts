@@ -1,8 +1,23 @@
-import { TopicResult } from '../engine/types';
+import { TopicResult, Constraint } from '../engine/types';
+import { strategyLabel } from './strategyLabels';
 
-export function exportManifestCSV(results: TopicResult[]): string {
-  const headers = ['topic_id', 'topic_name', 'prompt_id', 'prompt_text', 'status', 'n_urls', 'covered_by', 'uncovered_urls'];
+export interface ExportParams {
+  constraint: Constraint;
+  strategy: string;
+}
+
+export function exportManifestCSV(results: TopicResult[], params: ExportParams): string {
+  const headers = [
+    'topic_id', 'topic_name', 'prompt_id', 'prompt_text', 'status', 'n_urls',
+    'covered_by', 'uncovered_urls',
+    'constraint_type', 'constraint_value', 'strategy', 'selected_budget',
+    'coverage_pct', 'resilience_pct',
+  ];
   const rows = [headers.join(',')];
+
+  const constraintDisplay = params.constraint.axis === 'budget'
+    ? String(params.constraint.value)
+    : `${(params.constraint.value * 100).toFixed(0)}%`;
 
   for (const result of results) {
     for (const row of result.manifest) {
@@ -18,6 +33,12 @@ export function exportManifestCSV(results: TopicResult[]): string {
         String(row.nUrls),
         csvEscape(coveredBy),
         String(row.uncoveredUrls),
+        params.constraint.axis,
+        constraintDisplay,
+        csvEscape(strategyLabel(params.strategy)),
+        String(result.selectedBudget),
+        (result.selectedCoverage * 100).toFixed(2),
+        (result.selectedResilience * 100).toFixed(2),
       ].join(','));
     }
   }

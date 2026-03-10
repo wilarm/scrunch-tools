@@ -4,8 +4,8 @@ import { assessFlatness } from './flatness';
 import { fullParetoEnvelope } from './pareto';
 import { greedyForwardCurve } from './greedyCurve';
 import { DEFAULT_STRATEGIES } from './strategies';
-import { getBaselineMetrics, findBestPointForConstraint, replayTrajectoryCuts } from './selection';
-import { PromptSource, Constraint, TopicResult, ManifestRow, CoveringPrompt } from './types';
+import { getBaselineMetrics, findPointForStrategy, replayTrajectoryCuts } from './selection';
+import { PromptSource, Constraint, TopicAnalysis, TopicResult, ManifestRow, CoveringPrompt } from './types';
 
 export interface TopicGroup {
   topicId: string;
@@ -13,46 +13,79 @@ export interface TopicGroup {
   promptSources: PromptSource[];
 }
 
-export function runPipeline(
-  groups: TopicGroup[],
-  constraint: Constraint,
-): TopicResult[] {
-  return groups.map(group => runOneGroup(group, constraint));
+/**
+ * Heavy compute: run backward elimination for all 7 strategies.
+ * Call once per CSV upload. Returns analyses without selection.
+ */
+export function runAnalysis(groups: TopicGroup[]): TopicAnalysis[] {
+  return groups.map(analyzeOneGroup);
 }
 
-function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
+function analyzeOneGroup(group: TopicGroup): TopicAnalysis {
   const { topicId, topicName, promptSources } = group;
 
   const graph = BipartiteGraph.fromPromptSources(promptSources);
   const greedyCurve = greedyForwardCurve(promptSources);
-
   const flatness = assessFlatness(greedyCurve, graph.nUrls);
 
-  // Always run backward elimination (web app = test_mode equivalent)
   const trajectories = DEFAULT_STRATEGIES.map(strategy =>
     backwardEliminate(graph, strategy)
   );
 
   const paretoEnvelope = fullParetoEnvelope(trajectories);
 
-  // Selection
+  let baselineCoverage = 0;
+  let baselineResilience = 0;
+  if (trajectories.length > 0) {
+    const metrics = getBaselineMetrics(trajectories);
+    baselineCoverage = metrics.baselineCoverage;
+    baselineResilience = metrics.baselineResilience;
+  }
+
+  return {
+    topicId,
+    topicName,
+    nPrompts: graph.nPrompts,
+    nUrls: graph.nUrls,
+    flatness,
+    greedyCurve,
+    trajectories,
+    paretoEnvelope,
+    promptSources,
+    baselineCoverage,
+    baselineResilience,
+  };
+}
+
+/**
+ * Light selection: given pre-computed analyses, apply constraint + optional strategy override.
+ * Fast enough to call on every strategy change in the UI.
+ */
+export function applySelection(
+  analyses: TopicAnalysis[],
+  constraint: Constraint,
+  strategy: string,
+): TopicResult[] {
+  return analyses.map(a => selectForAnalysis(a, constraint, strategy));
+}
+
+function selectForAnalysis(
+  analysis: TopicAnalysis,
+  constraint: Constraint,
+  strategy: string,
+): TopicResult {
+  const { trajectories, baselineCoverage, baselineResilience } = analysis;
+
   let selectedPoint = null;
-  let selectedBudget = graph.nPrompts;
+  let selectedBudget = analysis.nPrompts;
   let selectedStrategy = 'none';
-  let selectedCoverage = 0;
-  let selectedResilience = 0;
+  let selectedCoverage = baselineCoverage;
+  let selectedResilience = baselineResilience;
   let cutIndices: number[] = [];
 
   if (trajectories.length > 0) {
-    const { baselineCoverage, baselineResilience } = getBaselineMetrics(trajectories);
-    selectedCoverage = baselineCoverage;
-    selectedResilience = baselineResilience;
-
-    selectedPoint = findBestPointForConstraint(
-      paretoEnvelope,
-      constraint,
-      baselineCoverage,
-      baselineResilience,
+    selectedPoint = findPointForStrategy(
+      trajectories, strategy, constraint, baselineCoverage, baselineResilience,
     );
 
     if (selectedPoint) {
@@ -64,10 +97,25 @@ function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
     }
   }
 
+  const manifest = buildManifest(analysis, cutIndices);
+
+  return {
+    ...analysis,
+    selectedPoint,
+    selectedBudget,
+    selectedStrategy,
+    selectedCoverage,
+    selectedResilience,
+    cutIndices,
+    manifest,
+  };
+}
+
+function buildManifest(analysis: TopicAnalysis, cutIndices: number[]): ManifestRow[] {
+  const { topicId, topicName, promptSources } = analysis;
   const cutSet = new Set(cutIndices);
   const keptIndices = promptSources.map((_, i) => i).filter(i => !cutSet.has(i));
 
-  // For each CUT prompt, greedily find KEPT prompts that cover its URLs
   const keptUrlSets = keptIndices.map(ki => ({
     idx: ki,
     urls: new Set(promptSources[ki].sources),
@@ -79,7 +127,6 @@ function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
     const covering: CoveringPrompt[] = [];
 
     while (remaining.size > 0) {
-      // Find KEPT prompt covering the most remaining URLs
       let bestIdx = -1;
       let bestShared = 0;
       for (const { idx: ki, urls: keptUrls } of keptUrlSets) {
@@ -92,10 +139,8 @@ function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
           bestIdx = ki;
         }
       }
-
       if (bestIdx < 0 || bestShared === 0) break;
 
-      // Remove covered URLs and record
       const keptUrls = keptUrlSets.find(k => k.idx === bestIdx)!.urls;
       for (const url of Array.from(remaining)) {
         if (keptUrls.has(url)) remaining.delete(url);
@@ -110,7 +155,7 @@ function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
     coverageMap.set(ci, { covering, uncovered: remaining.size });
   }
 
-  const manifest: ManifestRow[] = promptSources.map((ps, i) => {
+  return promptSources.map((ps, i) => {
     const coverage = coverageMap.get(i);
     return {
       topicId,
@@ -123,23 +168,4 @@ function runOneGroup(group: TopicGroup, constraint: Constraint): TopicResult {
       uncoveredUrls: coverage?.uncovered ?? 0,
     };
   });
-
-  return {
-    topicId,
-    topicName,
-    nPrompts: graph.nPrompts,
-    nUrls: graph.nUrls,
-    flatness,
-    greedyCurve,
-    trajectories,
-    paretoEnvelope,
-    promptSources,
-    selectedPoint,
-    selectedBudget,
-    selectedStrategy,
-    selectedCoverage,
-    selectedResilience,
-    cutIndices,
-    manifest,
-  };
 }

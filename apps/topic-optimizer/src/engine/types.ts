@@ -61,7 +61,7 @@ export interface ManifestRow {
   uncoveredUrls: number;
 }
 
-export interface TopicResult {
+export interface TopicAnalysis {
   topicId: string;
   topicName: string;
   nPrompts: number;
@@ -71,6 +71,11 @@ export interface TopicResult {
   trajectories: EliminationTrajectory[];
   paretoEnvelope: Map<number, ParetoPoint[]>;
   promptSources: PromptSource[];
+  baselineCoverage: number;
+  baselineResilience: number;
+}
+
+export interface TopicResult extends TopicAnalysis {
   selectedPoint: ParetoPoint | null;
   selectedBudget: number;
   selectedStrategy: string;
