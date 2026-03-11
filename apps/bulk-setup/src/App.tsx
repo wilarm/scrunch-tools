@@ -753,15 +753,15 @@ function App() {
   const hasFailures = failCount > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-sand-50">
+      <header className="bg-white border-b border-sand-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {activeWorkflow !== 'none' && (
                 <button
                   onClick={() => setActiveWorkflow('none')}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  className="flex items-center gap-2 text-sm text-sand-300 hover:text-sand-400 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
@@ -770,15 +770,12 @@ function App() {
               <a href="/">
                 <img src={`${import.meta.env.BASE_URL}scrunch-logo.svg`} alt="Scrunch" className="h-8" />
               </a>
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-gray-900">Bulk Setup</span>
-              </div>
+              <span className="text-sm text-sand-300">Bulk Setup</span>
             </div>
             <div className="relative">
               <button
                 onClick={() => setIsConfigDropdownOpen(!isConfigDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sand-300 hover:text-sand-400 hover:bg-sand-100 rounded-lg transition-colors"
                 title="API Configuration"
               >
                 <Settings className="w-5 h-5" />
@@ -790,11 +787,11 @@ function App() {
                     className="fixed inset-0 z-10"
                     onClick={() => setIsConfigDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-20">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">API Configuration</h3>
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-sand-200 p-4 z-20">
+                    <h3 className="text-sm font-semibold text-sand-400 mb-4">API Configuration</h3>
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="api-key" className="block text-sm font-medium text-gray-900 mb-2">
+                        <label htmlFor="api-key" className="block text-sm font-medium text-sand-400 mb-2">
                           Scrunch API Key
                         </label>
                         <input
@@ -803,7 +800,7 @@ function App() {
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           placeholder="Enter your Scrunch API key"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-900 placeholder:text-gray-400 text-sm"
+                          className="w-full px-3 py-2 border border-sand-200 rounded-md focus:ring-2 focus:ring-ocean-200 focus:border-ocean-200 outline-none bg-white text-sand-400 placeholder:text-sand-200 text-sm"
                         />
                       </div>
                     </div>
@@ -819,10 +816,10 @@ function App() {
         {activeWorkflow === 'none' ? (
           <div className="py-8">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-3">
+              <h1 className="text-2xl font-semibold text-sand-400 mb-3">
                 What would you like to set up in Scrunch?
               </h1>
-              <p className="text-gray-500 text-lg">
+              <p className="text-sand-300 text-lg">
                 You can do both.
               </p>
             </div>
@@ -830,22 +827,22 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <button
                 onClick={() => setActiveWorkflow('brands')}
-                className="group bg-white rounded-xl border border-gray-200 p-6 text-left transition-all hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 active:translate-y-0"
+                className="group bg-white rounded-xl border border-ocean-100 p-6 text-left transition-all hover:shadow-lg hover:border-ocean-300 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-7 h-7 text-gray-800" />
+                  <div className="w-12 h-12 rounded-lg bg-ocean-50 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-7 h-7 text-ocean-300" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-1.5">
+                    <h2 className="text-xl font-semibold text-sand-400 mb-1.5">
                       Configure brands in bulk
                     </h2>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+                    <p className="text-sand-300 text-sm leading-relaxed">
                       Set up a brand configuration template with dynamic variables specific to each brand.
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center text-blue-600 font-semibold text-sm group-hover:text-blue-700">
+                <div className="flex items-center text-ocean-300 font-semibold text-sm group-hover:text-ocean-400">
                   Get started
                   <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
                 </div>
@@ -853,22 +850,22 @@ function App() {
 
               <button
                 onClick={() => setActiveWorkflow('prompts')}
-                className="group bg-white rounded-xl border border-gray-200 p-6 text-left transition-all hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 active:translate-y-0"
+                className="group bg-white rounded-xl border border-ocean-100 p-6 text-left transition-all hover:shadow-lg hover:border-ocean-200 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-7 h-7 text-gray-800" />
+                  <div className="w-12 h-12 rounded-lg bg-ocean-100 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-7 h-7 text-ocean-200" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-1.5">
+                    <h2 className="text-xl font-semibold text-sand-400 mb-1.5">
                       Add prompts in bulk
                     </h2>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+                    <p className="text-sand-300 text-sm leading-relaxed">
                       Set up prompts with dynamic variables specific to each brand.
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center text-blue-600 font-semibold text-sm group-hover:text-blue-700">
+                <div className="flex items-center text-ocean-200 font-semibold text-sm group-hover:text-ocean-300">
                   Get started
                   <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
                 </div>
