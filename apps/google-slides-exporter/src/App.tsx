@@ -212,7 +212,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-ocean-300 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Completing authentication...</p>
         </div>
       </div>
@@ -228,7 +228,7 @@ function App() {
               <img src="/slides/scrunch-logo.svg" alt="Scrunch" className="h-8" />
             </a>
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-orange-600" />
+              <FileText className="w-5 h-5 text-ocean-300" />
               <span className="text-sm font-medium text-gray-900">Slides Generator</span>
             </div>
           </div>
@@ -238,9 +238,9 @@ function App() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6 text-white">
+          <div className="bg-gradient-to-r from-ocean-300 to-ocean-400 px-8 py-6 text-white">
             <h1 className="text-2xl font-bold mb-2">Create Google Slides Reports</h1>
-            <p className="text-orange-100 text-sm">
+            <p className="text-ocean-100 text-sm">
               Generate branded presentations from your Scrunch API data
             </p>
           </div>
@@ -263,7 +263,7 @@ function App() {
                       value={formState.apiKey}
                       onChange={e => handleApiKeyChange(e.target.value)}
                       placeholder="Enter your Scrunch API key"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                     />
                     <button
                       type="button"
@@ -277,7 +277,7 @@ function App() {
                   </div>
                   {isFetchingBrands && (
                     <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-3 h-3 border-2 border-ocean-300 border-t-transparent rounded-full animate-spin"></span>
                       Loading brands...
                     </p>
                   )}
@@ -291,7 +291,7 @@ function App() {
                     <select
                       value={formState.brandId}
                       onChange={e => handleBrandChange(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                     >
                       <option value="">Select a brand</option>
                       {brands.map(brand => (
@@ -305,9 +305,13 @@ function App() {
                       type="text"
                       value={formState.brandId}
                       onChange={e => updateForm('brandId', e.target.value)}
-                      placeholder="Enter API key to load brands"
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                      placeholder={formState.apiKey.length >= 20 ? 'Enter brand ID manually' : 'Enter API key to load brands'}
+                      disabled={formState.apiKey.length < 20}
+                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${
+                        formState.apiKey.length >= 20
+                          ? 'focus:ring-2 focus:ring-ocean-300 focus:border-transparent'
+                          : 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                      }`}
                     />
                   )}
                 </div>
@@ -321,7 +325,7 @@ function App() {
                       type="date"
                       value={formState.startDate}
                       onChange={e => updateForm('startDate', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -332,7 +336,7 @@ function App() {
                       type="date"
                       value={formState.endDate}
                       onChange={e => updateForm('endDate', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -344,7 +348,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => setShowAdditionalFilters(!showAdditionalFilters)}
-                className="w-full flex items-center justify-between border-b pb-2 hover:text-orange-600 transition-colors"
+                className="w-full flex items-center justify-between border-b pb-2 hover:text-ocean-300 transition-colors"
               >
                 <h2 className="text-lg font-semibold text-gray-900">
                   Additional Filters <span className="text-sm font-normal text-gray-500">(Optional)</span>
@@ -372,7 +376,7 @@ function App() {
                         value={formState.tag || ''}
                         onChange={e => updateForm('tag', e.target.value)}
                         placeholder="e.g., product-research, pricing"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent text-sm"
                       />
                       <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
                     </div>
@@ -391,7 +395,7 @@ function App() {
                       <select
                         value={formState.aiPlatform || ''}
                         onChange={e => updateForm('aiPlatform', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent text-sm"
                       >
                         <option value="">Any Platform</option>
                         <option value="chatgpt">ChatGPT</option>
@@ -422,7 +426,7 @@ function App() {
                       <select
                         value={formState.branded || ''}
                         onChange={e => updateForm('branded', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent text-sm"
                       >
                         <option value="">Any</option>
                         <option value="true">Branded</option>
@@ -446,7 +450,7 @@ function App() {
                         value={formState.promptTopic || ''}
                         onChange={e => updateForm('promptTopic', e.target.value)}
                         placeholder="e.g., pricing, features, reviews"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent text-sm"
                       />
                       <p className="text-xs text-gray-500 mt-1">Separate multiple topics with commas</p>
                     </div>
@@ -462,15 +466,15 @@ function App() {
               </h2>
               <div className="space-y-4">
                 {!useCustomTemplate && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-ocean-50 border border-ocean-100 rounded-lg p-4">
                     <div className="flex items-start gap-2">
-                      <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-blue-900">
+                      <Info className="w-5 h-5 text-ocean-300 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-ocean-400">
                         <p className="font-medium mb-1">Using Scrunch default template</p>
-                        <p className="text-blue-700 text-xs">
+                        <p className="text-ocean-300 text-xs">
                           This template includes all standard brand metrics and is ready to use.
                         </p>
-                        <p className="text-blue-600 text-xs mt-1">
+                        <p className="text-ocean-300 text-xs mt-1">
                           ✨ Massive improvements to the v1 default template are coming soon!
                         </p>
                       </div>
@@ -487,7 +491,7 @@ function App() {
                     value={formState.slideName}
                     onChange={e => updateForm('slideName', e.target.value)}
                     placeholder="e.g., Brand Report - Q1 2024"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                   />
                 </div>
 
@@ -510,7 +514,7 @@ function App() {
                         }));
                       }
                     }}
-                    className="text-sm text-orange-600 hover:text-orange-700 font-medium underline"
+                    className="text-sm text-ocean-300 hover:text-ocean-400 font-medium underline"
                   >
                     {useCustomTemplate ? '← Use default template' : 'Use my own template →'}
                   </button>
@@ -528,7 +532,7 @@ function App() {
                           value={formState.templateId}
                           onChange={e => updateForm('templateId', e.target.value)}
                           placeholder="Paste Google Slides URL or template ID"
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent"
                         />
                         <button
                           type="button"
@@ -577,15 +581,15 @@ function App() {
                             <p className="font-semibold mb-2">Available Placeholder Variables:</p>
                             <div className="bg-gray-50 rounded p-3 space-y-1.5 text-xs font-mono">
                               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                <div><code className="text-orange-600">{'{{brand_name}}'}</code> - Brand identifier</div>
-                                <div><code className="text-orange-600">{'{{brand_id}}'}</code> - Brand ID</div>
-                                <div><code className="text-orange-600">{'{{date_range}}'}</code> - Full date range</div>
-                                <div><code className="text-orange-600">{'{{start_date}}'}</code> - Start date</div>
-                                <div><code className="text-orange-600">{'{{end_date}}'}</code> - End date</div>
-                                <div><code className="text-orange-600">{'{{total_responses}}'}</code> - Response count</div>
-                                <div><code className="text-orange-600">{'{{presence_pct}}'}</code> - Brand presence %</div>
-                                <div><code className="text-orange-600">{'{{position_score}}'}</code> - Position score</div>
-                                <div><code className="text-orange-600">{'{{sentiment_score}}'}</code> - Sentiment score</div>
+                                <div><code className="text-ocean-300">{'{{brand_name}}'}</code> - Brand identifier</div>
+                                <div><code className="text-ocean-300">{'{{brand_id}}'}</code> - Brand ID</div>
+                                <div><code className="text-ocean-300">{'{{date_range}}'}</code> - Full date range</div>
+                                <div><code className="text-ocean-300">{'{{start_date}}'}</code> - Start date</div>
+                                <div><code className="text-ocean-300">{'{{end_date}}'}</code> - End date</div>
+                                <div><code className="text-ocean-300">{'{{total_responses}}'}</code> - Response count</div>
+                                <div><code className="text-ocean-300">{'{{presence_pct}}'}</code> - Brand presence %</div>
+                                <div><code className="text-ocean-300">{'{{position_score}}'}</code> - Position score</div>
+                                <div><code className="text-ocean-300">{'{{sentiment_score}}'}</code> - Sentiment score</div>
                               </div>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">
@@ -598,7 +602,7 @@ function App() {
                             <div className="bg-gray-50 rounded p-3 text-xs">
                               <p className="mb-1">In your slide, you might write:</p>
                               <p className="font-mono text-gray-600 ml-2">
-                                "During {'{{date_range}}'}, <span className="text-orange-600">{'{{brand_name}}'}</span> had a presence in <span className="text-orange-600">{'{{presence_pct}}'}</span> of responses."
+                                "During {'{{date_range}}'}, <span className="text-ocean-300">{'{{brand_name}}'}</span> had a presence in <span className="text-ocean-300">{'{{presence_pct}}'}</span> of responses."
                               </p>
                               <p className="mt-2 text-gray-500">This will become:</p>
                               <p className="font-mono text-gray-600 ml-2">
@@ -633,7 +637,7 @@ function App() {
                 type="button"
                 onClick={handleGenerate}
                 disabled={generationStep !== 'idle' && generationStep !== 'error' && generationStep !== 'done'}
-                className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base transition-colors"
+                className="w-full px-6 py-3 bg-ocean-300 text-white rounded-lg hover:bg-ocean-400 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base transition-colors"
               >
                 Generate Slides
               </button>
@@ -653,7 +657,7 @@ function App() {
             Need help? Check out the{' '}
             <a
               href="https://docs.google.com/document/d/example"
-              className="text-orange-600 hover:text-orange-700 font-medium"
+              className="text-ocean-300 hover:text-ocean-400 font-medium"
             >
               template creation guide
             </a>
