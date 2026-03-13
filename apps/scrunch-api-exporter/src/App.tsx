@@ -318,7 +318,7 @@ function App() {
                       type="password"
                       value={apiKey}
                       onChange={(e) => handleApiKeyChange(e.target.value)}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent transition"
                       placeholder="Enter your API key"
                     />
                     <button
@@ -333,7 +333,7 @@ function App() {
                   </div>
                   {isFetchingBrands && (
                     <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-3 h-3 border-2 border-ocean-300 border-t-transparent rounded-full animate-spin"></span>
                       Loading brands...
                     </p>
                   )}
@@ -347,7 +347,7 @@ function App() {
                     <select
                       value={brandId}
                       onChange={(e) => setBrandId(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent transition"
                     >
                       <option value="">Select a brand</option>
                       {brands.map(brand => (
@@ -361,9 +361,13 @@ function App() {
                       type="text"
                       value={brandId}
                       onChange={(e) => setBrandId(e.target.value)}
-                      placeholder="Enter API key to load brands"
-                      disabled
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed transition"
+                      placeholder={apiKey.length >= 20 ? 'Enter brand ID manually' : 'Enter API key to load brands'}
+                      disabled={apiKey.length < 20}
+                      className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg transition ${
+                        apiKey.length >= 20
+                          ? 'focus:ring-2 focus:ring-ocean-300 focus:border-transparent'
+                          : 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                      }`}
                     />
                   )}
                 </div>
@@ -381,7 +385,7 @@ function App() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent transition"
                     />
                   </div>
 
@@ -393,7 +397,7 @@ function App() {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-300 focus:border-transparent transition"
                     />
                   </div>
                 </div>
@@ -420,7 +424,7 @@ function App() {
                             setFilterPlatforms([...filterPlatforms, val]);
                           }
                         }}
-                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-ocean-300 focus:border-ocean-300"
                       >
                         <option value="">Platform{filterPlatforms.length > 0 ? ` (${filterPlatforms.length})` : ''}</option>
                         {filterPlatforms.length > 0 && <option value="__clear__">Clear filter</option>}
@@ -433,9 +437,9 @@ function App() {
                       {filterPlatforms.length > 0 && (
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {filterPlatforms.map(val => (
-                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-ocean-50 text-ocean-300">
                               {val}
-                              <button onClick={() => setFilterPlatforms(filterPlatforms.filter(p => p !== val))} className="hover:text-blue-900">×</button>
+                              <button onClick={() => setFilterPlatforms(filterPlatforms.filter(p => p !== val))} className="hover:text-ocean-400">×</button>
                             </span>
                           ))}
                         </div>
@@ -454,7 +458,7 @@ function App() {
                             setFilterStages([...filterStages, val]);
                           }
                         }}
-                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-1.5 pr-8 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-ocean-300 focus:border-ocean-300"
                       >
                         <option value="">Stage{filterStages.length > 0 ? ` (${filterStages.length})` : ''}</option>
                         {filterStages.length > 0 && <option value="__clear__">Clear filter</option>}
@@ -467,9 +471,9 @@ function App() {
                       {filterStages.length > 0 && (
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {filterStages.map(val => (
-                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                            <span key={val} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-ocean-50 text-ocean-300">
                               {val}
-                              <button onClick={() => setFilterStages(filterStages.filter(s => s !== val))} className="hover:text-blue-900">×</button>
+                              <button onClick={() => setFilterStages(filterStages.filter(s => s !== val))} className="hover:text-ocean-400">×</button>
                             </span>
                           ))}
                         </div>
@@ -508,14 +512,14 @@ function App() {
 
               {activeTab === 'responses' && (
                 <>
-                  <div className="border-t pt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="border-t pt-6 bg-ocean-50 border border-ocean-100 rounded-lg p-4">
                     <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-5 h-5 text-ocean-300 flex-shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="font-semibold text-blue-900 mb-2">Responses endpoint access</h4>
-                        <p className="text-sm text-blue-800">
+                        <h4 className="font-semibold text-ocean-400 mb-2">Responses endpoint access</h4>
+                        <p className="text-sm text-ocean-400">
                           Some Scrunch plans do not include access to the Responses API. If you think you should have access, or you want to request it, email{' '}
-                          <a href="mailto:support@scrunchai.com" className="underline font-semibold hover:text-blue-900">
+                          <a href="mailto:support@scrunchai.com" className="underline font-semibold hover:text-ocean-400">
                             support@scrunchai.com
                           </a>
                           .
@@ -568,7 +572,7 @@ function App() {
                     )}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div className="bg-blue-600 h-2 rounded-full animate-progress-slide" />
+                    <div className="bg-ocean-300 h-2 rounded-full animate-progress-slide" />
                   </div>
                 </div>
               )}
@@ -588,7 +592,7 @@ function App() {
               <div className="border-t pt-6 flex gap-2">
                 <button
                   onClick={handleShowApiCall}
-                  className="px-4 py-2.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
+                  className="px-4 py-2.5 text-sm font-semibold text-ocean-300 bg-ocean-50 rounded-lg hover:bg-ocean-100 transition"
                 >
                   Show API Call
                 </button>
@@ -616,7 +620,7 @@ function App() {
               <button
                 onClick={handleExportClick}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3.5 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+                className="w-full bg-ocean-300 hover:bg-ocean-400 disabled:bg-gray-400 text-white font-semibold py-3.5 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
